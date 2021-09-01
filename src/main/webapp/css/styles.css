@@ -1,0 +1,76 @@
+/* Set 3-column grid to 25/50/25% */
+.ui-grid-a .ui-block-a {
+    width: 30%;
+}
+.ui-grid-a .ui-block-b {
+    width: 40%;
+}
+.ui-grid-a .ui-block-c {
+    width: 30%;
+}
+
+/* Set 3-column grid to 25/50/25% */
+.ui-grid-b {
+    height: 20%;
+}
+.ui-grid-b .ui-block-a {
+    width: 30%;
+}
+.ui-grid-b .ui-block-b {
+    width: 40%;
+}
+.ui-grid-b .ui-block-c {
+    width: 30%;
+}
+
+/* Set 3-column grid to 25/50/25% */
+.ui-grid-c .ui-block-a {
+    width: 30%;
+}
+.ui-grid-c .ui-block-b {
+    width: 40%;
+}
+.ui-grid-c .ui-block-c {
+    width: 30%;
+}
+
+/* Set 3-column grid to 25/50/25% */
+.ui-grid-d .ui-block-a {
+    width: 30%;
+}
+.ui-grid-d .ui-block-b {
+    width: 40%;
+}
+.ui-grid-d .ui-block-c {
+    width: 30%;
+}
+
+/* Set 3-column grid to 25/50/25% */
+.ui-grid-e .ui-block-a {
+    width: 30%;
+}
+.ui-grid-e .ui-block-b {
+    width: 40%;
+}
+.ui-grid-e .ui-block-c {
+    width: 30%;
+}
+
+.developed {
+    text-align: center;
+    font-size: 12px;
+}
+
+.center {
+    margin-left:auto;
+    margin-right:auto;
+    width:250px;
+}
+
+.court {
+    width: 250px;
+    height: 248px;
+    background-image: url('images/court_layout.png');
+    background-repeat: no-repeat;
+    background-position: 0 0, center;
+}
