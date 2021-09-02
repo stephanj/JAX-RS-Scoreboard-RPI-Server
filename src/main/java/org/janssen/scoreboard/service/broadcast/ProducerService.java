@@ -1,10 +1,7 @@
 package org.janssen.scoreboard.service.broadcast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -93,10 +90,8 @@ public class ProducerService extends AbstractBroadcaster {
             HttpPost httppost = new HttpPost(BASE_URL + path);
             httppost.setEntity(new StringEntity("" + foul));
             httpclient.execute(httppost);
-        } catch (ClientProtocolException e) {
-
         } catch (IOException e) {
-
+            // Ignore because it's a fire and forget REST call
         }
     }
 }
