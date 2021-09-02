@@ -1,9 +1,7 @@
 package org.janssen.scoreboard.service.broadcast;
 
 import org.janssen.scoreboard.controller.DeviceController;
-import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.GPIOType;
-import org.janssen.scoreboard.model.type.TeamType;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -46,19 +44,19 @@ public class ConsumerService extends AbstractBroadcaster {
     @POST
     @Path(NEW_GAME)
     public void newMirroredBasketGame() {
-        final Team team = new Team();
-        team.setKey(TeamType.A.toString());
-        device.setScore(team);
+        // Reset the score
+        device.setScoreHome(0);
+        device.setScoreVisitors(0);
 
-        team.setKey(TeamType.B.toString());
-        device.setScore(team);
-
-        device.setClockOnly(600);
+        // Reset the fouls
         device.setFoulsHome(0);
         device.setFoulsVisitors(0);
 
+        // Reset the timeouts
         printTimeoutHome(NO_TIMEOUTS);
         printTimeoutVisitors(NO_TIMEOUTS);
+
+        device.setClockOnly(600);
     }
 
     @POST
