@@ -16,15 +16,8 @@
  */
 package org.janssen.scoreboard.dao;
 
-import org.janssen.scoreboard.model.Token;
+import org.springframework.stereotype.Repository;
 
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
 
@@ -33,11 +26,10 @@ import java.util.List;
  * It simplifies refactoring (unitName change) and wraps some logic (limited queries).
  *
  */
-@Singleton
-@Lock(LockType.READ)
+@Repository
 public class DAO {
 
-    @PersistenceContext(unitName = "scoreboard")
+//    @PersistenceContext(unitName = "scoreboard")
     private EntityManager em;
 
     public <E> E create(E e) {

@@ -1,4 +1,4 @@
-package org.janssen.scoreboard.service;
+package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.dao.TokenDAO;

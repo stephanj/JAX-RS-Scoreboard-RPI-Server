@@ -5,11 +5,12 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.TeamType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import java.io.IOException;
 
 import static org.janssen.scoreboard.service.util.Constants.SEVEN_SECONDS_IN_MILLI;
@@ -34,26 +35,32 @@ import static org.janssen.scoreboard.service.util.Constants.TWENTY_FOUR_SECONDS;
  *
  * @author Stephan Janssen
  */
-@Stateless
+@Component
 public class DeviceController {
 
-     final String cmd_score = "/home/pi/score";
+    private final Logger log = LoggerFactory.getLogger(DeviceController.class);
+
+    final String cmd_score = "/home/pi/score";
 //    final String cmd_score = "/bin/echo";
 
     final DefaultExecutor executor = new DefaultExecutor();
 
-    @EJB
-    private GameClockController gameClockController;
+    private final GameClockController gameClockController;
 
-    @EJB
-    private TwentyFourClockController twentyFourClockController;
+    private final TwentyFourClockController twentyFourClockController;
+
+    public DeviceController(GameClockController gameClockController,
+                            TwentyFourClockController twentyFourClockController) {
+        this.gameClockController = gameClockController;
+        this.twentyFourClockController = twentyFourClockController;
+    }
 
     @PostConstruct
     public void init() {
         executor.setExitValue(1);
     }
 
-    @Asynchronous
+    @Async
     public void setScore(final Team team) {
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setScoreHome(team.getScore());
@@ -62,17 +69,17 @@ public class DeviceController {
         }
     }
 
-    @Asynchronous
+    @Async
     public void setScoreHome(final int score) {
         execute(String.format("%s -h%03d", cmd_score, score));
     }
 
-    @Asynchronous
+    @Async
     public void setScoreVisitors(final int score) {
         execute(String.format("%s -v%03d", cmd_score, score));
     }
 
-    @Asynchronous
+    @Async
     public void setPlayerFoul(final int foul) {
         execute(String.format("%s -q%d", cmd_score, foul));
 
@@ -85,7 +92,7 @@ public class DeviceController {
         execute(String.format("%s -q%d", cmd_score, 0));
     }
 
-    @Asynchronous
+    @Async
     public void setFoul(final Team team) {
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setFoulsHome(team.getFouls());
@@ -94,43 +101,43 @@ public class DeviceController {
         }
     }
 
-    @Asynchronous
+    @Async
     public void setFoulsHome(final int fouls) {
         execute(String.format("%s -a%d", cmd_score, fouls));
     }
 
-    @Asynchronous
+    @Async
     public void turnOff() {
         execute(String.format("%s -z", cmd_score));
     }
 
-    @Asynchronous
+    @Async
     public void setFoulsVisitors(final int fouls) {
         execute(String.format("%s -b%d", cmd_score, fouls));
     }
 
-    @Asynchronous
+    @Async
     public void setAllClocks(final int seconds, final int twentyFourSeconds) {
         setClockOnly(seconds);
         execute(String.format("%s -t%02d", cmd_score, twentyFourSeconds));
     }
 
-    @Asynchronous
+    @Async
     public void setClockOnly(final int seconds) {
         execute(String.format("%s -k%02d%02d", cmd_score, seconds/60, seconds%60));
     }
 
-    @Asynchronous
+    @Async
     public void setTwentyFour(final int seconds) {
         execute(String.format("%s -t%02d", cmd_score, seconds));
     }
 
-    @Asynchronous
+    @Async
     public void clearBoard() {
         execute(String.format("%s -z", cmd_score));
     }
 
-    @Asynchronous
+    @Async
     public void setScoreboard(final String value) {
         execute(String.format("%s -f%s", cmd_score, value));
     }
@@ -154,7 +161,7 @@ public class DeviceController {
             executor.execute(cmdLine);
 
         } catch (IOException e) {
-            // e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 }

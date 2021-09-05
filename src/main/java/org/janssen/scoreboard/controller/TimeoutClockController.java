@@ -1,39 +1,44 @@
 package org.janssen.scoreboard.controller;
 
-import javax.annotation.Resource;
-import javax.ejb.*;
-import javax.inject.Inject;
-
 import static org.janssen.scoreboard.service.util.Constants.*;
 import org.janssen.scoreboard.model.type.GPIOType;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * The 60s clock controller.
  *
  * @author Stephan Janssen
  */
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
+@Component
+@Scope("singleton")
 public class TimeoutClockController {
 
     private static final String CLOCK_NAME = "timeout";
-    @EJB
-    private TwentyFourClockController twentyFourClockController;
 
-    @Inject
-    private DeviceController device;
+    private final TwentyFourClockController twentyFourClockController;
 
-    @Inject
-    private GPIOController gpioController;
+    private final DeviceController device;
+
+    private final GPIOController gpioController;
+
+    private final TimerService timerService;
 
     private int twentyFourSecondsValue;
 
     private int timeoutValue;
 
-    @Resource
-    private TimerService timerService;
-
     private boolean isRunning = false;
+
+    public TimeoutClockController(TwentyFourClockController twentyFourClockController,
+                                  DeviceController device,
+                                  GPIOController gpioController,
+                                  TimerService timerService) {
+        this.twentyFourClockController = twentyFourClockController;
+        this.device = device;
+        this.gpioController = gpioController;
+        this.timerService = timerService;
+    }
 
     public synchronized void start() {
 

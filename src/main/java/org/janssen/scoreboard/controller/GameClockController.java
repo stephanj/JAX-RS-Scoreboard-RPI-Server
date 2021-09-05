@@ -3,32 +3,22 @@ package org.janssen.scoreboard.controller;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.janssen.scoreboard.model.type.GameType;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.inject.Inject;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import static org.janssen.scoreboard.service.util.Constants.FOOTBALL_DURATION;
 import static org.janssen.scoreboard.service.util.Constants.ZERO_SECONDS;
 
 /**
  * @author Stephan Janssen
  */
-// @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Lock(LockType.READ)
-@Startup
-@Singleton
+@Component
+@Scope("singleton")
 public class GameClockController {
 
-    // private static final Logger LOGGER = Logger.getLogger(GameClockController.class.getName());
+    private final Logger log = LoggerFactory.getLogger(GameClockController.class);
 
     // We start at 1 this way it will take max. 99ms
     // to update the clock when "start" has been signaled!
@@ -49,76 +39,67 @@ public class GameClockController {
 
     private GameType gameType;
 
-    @Inject
-    private GPIOController gpioController;
+    private final GPIOController gpioController;
 
-    @Inject
-    private DeviceController device;
+    private final DeviceController device;
 
-    @Inject
-    private ProducerService producerService;
+    private final ProducerService producerService;
 
+    public GameClockController(GPIOController gpioController,
+                               DeviceController device,
+                               ProducerService producerService) {
+        this.gpioController = gpioController;
+        this.device = device;
+        this.producerService = producerService;
+    }
 
     private boolean mirrored = false;
 
-    @Resource
-    private ManagedScheduledExecutorService ses;
-
-    private ScheduledFuture<?> future;
-
-    @PostConstruct
+    @Scheduled(initialDelay = 0, fixedDelay = 1000)
     public void init() {
 
-        future = ses.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
+        if (isRunning) {
 
-                if (isRunning) {
+            milliCounter--;
 
-                    milliCounter--;
+            if (milliCounter <= UPDATE_CLOCK) {
 
-                    if (milliCounter <= UPDATE_CLOCK) {
+                switch(gameType) {
 
-                        switch(gameType) {
+                    // Increment clock for football
+                    case FOOTBALL:
 
-                            // Increment clock for football
-                            case FOOTBALL:
+                        currentTimeInSeconds++;     // Clock 'counts up'
 
-                                currentTimeInSeconds++;     // Clock 'counts up'
-
-                                setClock();
-                                if (currentTimeInSeconds >= FOOTBALL_DURATION) {
-                                    endQuarter();
-                                }
-                                break;
-
-                            case BASKET:
-                            case BASKET_KIDS:
-
-                                currentTimeInSeconds--;     // For Basket the clock 'counts down'
-
-                                setClock();
-                                if (currentTimeInSeconds <= ZERO_SECONDS) {
-                                    endQuarter();
-                                }
-                                break;
+                        setClock();
+                        if (currentTimeInSeconds >= FOOTBALL_DURATION) {
+                            endQuarter();
                         }
+                        break;
 
-                        milliCounter = RESET_TIMER;
-                    }
+                    case BASKET:
+                    case BASKET_KIDS:
+
+                        currentTimeInSeconds--;     // For Basket the clock 'counts down'
+
+                        setClock();
+                        if (currentTimeInSeconds <= ZERO_SECONDS) {
+                            endQuarter();
+                        }
+                        break;
                 }
-            }
-        },  0, 100, TimeUnit.MILLISECONDS);
-    }
 
-    @PreDestroy
-    public void destroy() {
-        future.cancel(true);
+                milliCounter = RESET_TIMER;
+            }
+        }
     }
 
     public synchronized void start(final int currentTimeInSeconds,
                                    final GameType gameType,
                                    final boolean mirrored) {
+
+        log.debug("Start game clock");
+
         this.gameType = gameType;
         this.mirrored = mirrored;
 
@@ -130,6 +111,8 @@ public class GameClockController {
     }
 
     public synchronized void stop() {
+        log.debug("Stop game clock");
+
         if (isRunning) {
             isRunning = false;
         }
@@ -137,7 +120,6 @@ public class GameClockController {
 
     private void endQuarter() {
         stop();
-
         gpioController.setBuzz(GPIOType.END_QUARTER);
     }
 
@@ -148,6 +130,8 @@ public class GameClockController {
     }
 
     private void setClock() {
+        log.debug("set clock");
+
         if (mirrored) {
             producerService.printTimeInSeconds(currentTimeInSeconds);
         }

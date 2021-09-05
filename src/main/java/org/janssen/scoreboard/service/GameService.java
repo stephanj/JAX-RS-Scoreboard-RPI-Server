@@ -3,233 +3,220 @@ package org.janssen.scoreboard.service;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.controller.GameClockController;
-import org.janssen.scoreboard.controller.TwentyFourClockController;
-import org.janssen.scoreboard.dao.GameDAO;
-import org.janssen.scoreboard.dao.TeamDAO;
-import org.janssen.scoreboard.dao.TokenDAO;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.Team;
-import org.janssen.scoreboard.model.Token;
 import org.janssen.scoreboard.model.type.GPIOType;
+import org.janssen.scoreboard.model.type.GameType;
 import org.janssen.scoreboard.model.type.TeamType;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
+import org.janssen.scoreboard.service.repository.GameRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.Optional;
+import java.util.logging.Level;
 
-import static org.janssen.scoreboard.service.util.Constants.TWENTY_FOUR_SECONDS;
-import static org.janssen.scoreboard.service.util.ResponseUtil.*;
+import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
+import static org.janssen.scoreboard.service.util.Constants.TEN_MINUTES_IN_SECONDS;
+import static org.janssen.scoreboard.service.util.ResponseUtil.badRequest;
 
-/**
- * The Game service.
- *
- * @author Stephan Janssen
- */
-@Singleton
-@Produces({MediaType.APPLICATION_JSON})
-@Path("/api/game")
+@Service
 public class GameService {
 
-    private static final Logger LOGGER = Logger.getLogger(GameService.class.getName());
+    private final Logger log = LoggerFactory.getLogger(GameService.class);
 
-    private static final String ID = "id";
-    private static final String TOKEN = "token";
-    private static final String MIRRORED = "mirrored";
-    private static final String FIRST = "first";
-    private static final String MAX = "max";
+    private final GameClockController gameClockController;
 
-    @EJB
-    private GameDAO gameDAO;
+    private final GameRepository gameRepository;
 
-    @EJB
-    private TeamDAO teamDAO;
+    private final TeamService teamService;
 
-    @EJB
-    private TokenDAO tokenDAO;
+    private final GPIOController gpioController;
 
-    @Inject
-    private DeviceController device;
+    private final DeviceController device;
 
-    @Inject
-    private GPIOController gpioController;
+    private final ProducerService producerService;
 
-    @EJB
-    private GameClockController clockController;
+    private Game currentGame = null;
 
-    @EJB
-    private TwentyFourClockController twentyFourClockController;
+    public GameService(GameRepository gameRepository,
+                       GameClockController gameClockController,
+                       TeamService teamService,
+                       DeviceController device,
+                       GPIOController gpioController,
+                       ProducerService producerService) {
+        this.gameRepository = gameRepository;
+        this.gameClockController = gameClockController;
+        this.teamService = teamService;
+        this.gpioController = gpioController;
+        this.producerService = producerService;
+        this.device = device;
+    }
 
-    @Inject
-    private ProducerService producerService;
+    public Optional<Game> findGameById(Long gameId) {
+        return gameRepository.findById(gameId);
+    }
 
-    @POST
-    @Path("/")
-    public Response createGame(@QueryParam(TOKEN) String token,
-                               @QueryParam("teamA") String nameA,
-                               @QueryParam("teamB") String nameB,
-                               @QueryParam("type") int type,
-                               @QueryParam("age") int ageCategory,
-                               @QueryParam("court") String court,
-                               @QueryParam(MIRRORED) boolean mirrored) {
+    @Transactional
+    public void update(final Game game) {
+        if (game.isMirrored()) {
+            // Reset Team Fouls slave board
+            producerService.printFoulsA(0);
+            producerService.printFoulsB(0);
 
-        final Token foundToken = tokenDAO.find(token);
-        if (foundToken == null) {
-            LOGGER.info("Invalid token: "+token);
-            return unauthorized("Invalid token");
+            // Reset game clock slave board
+            producerService.printTimeInSeconds(game.getClock());
         }
 
-        // Clock might be running in countdown mode
-        if (clockController.isRunning()) {
-            clockController.stop();
+        gameRepository.save(game);
+
+        // Reset Team Fouls
+        device.setFoulsHome(0);
+        device.setFoulsVisitors(0);
+
+        // Reset game clock
+        device.setClockOnly(game.getClock());
+    }
+
+    public Optional<Game> current() {
+        return Optional.of(currentGame);
+    }
+
+    public void setGameClock(final Game game) {
+
+        final GameType type = game.getGameType();
+
+        switch(type) {
+            case BASKET:
+                game.setClock(TEN_MINUTES_IN_SECONDS);
+                break;
+
+            case BASKET_KIDS:
+                game.setClock(FOUR_MINUTES);
+                break;
+
+            case FOOTBALL:
+                game.setClock(0);
+                break;
+        }
+    }
+
+    @Transactional
+    public void incrementGameQuarter(Game game) {
+
+        // Verify how many quarters mini football can have... 2 ?
+        game.incrementQuarter();
+
+        resetTeamFouls(game);
+
+        // Reset the clock based on game type
+        setGameClock(game);
+        gameClockController.setSeconds(game.getClock());
+
+        if ((game.getGameType() == GameType.BASKET && game.getQuarter() == 3) ||
+            (game.getGameType() == GameType.BASKET_KIDS && game.getQuarter() == 5)) {
+            resetTimeoutLeds(game);
         }
 
-        final Team teamA = teamDAO.create(nameA, TeamType.A, mirrored);
-        LOGGER.info("TeamA mirroring turned on? " + teamA.isMirrored());
+        // Show the 24s LEDs
+        gpioController.showTwentyFourSeconds(true);
 
-        final Team teamB = teamDAO.create(nameB, TeamType.B, mirrored);
-        LOGGER.info("TeamB mirroring turned on? " + teamB.isMirrored());
+        gameRepository.save(game);
+    }
 
-        final Game game = gameDAO.create(teamA, teamB, type, ageCategory, court, foundToken.getFullName(), mirrored);
+    public void resetTimeoutLeds(final Game game) {
 
-        LOGGER.info("Game mirroring turned on? " + game.isMirrored());
+        log.info("game.isMirrored? " + game.isMirrored());
 
         if (game.isMirrored()) {
-            // Init slave scoreboard
-            producerService.newGame();
+            log.info("QuarterService mirroring turn ON");
+
+            producerService.printHomeTimeout(0);
+            producerService.printVisitorsTimeout(0);
+        } else {
+            log.info("QuarterService mirroring turn OFF");
         }
 
-        device.setGame(game);
+        final Team teamA = game.getTeamA();
+        teamA.setTimeOut(0);
+        teamService.save(teamA);
 
-        // Reset the timeout LEDs
-        gpioController.setLed(GPIOType.TIME_OUT_V1, false);
-        gpioController.setLed(GPIOType.TIME_OUT_V2, false);
+        final Team teamB = game.getTeamB();
+        teamB.setTimeOut(0);
+        teamService.save(teamB);
 
         gpioController.setLed(GPIOType.TIME_OUT_H1, false);
         gpioController.setLed(GPIOType.TIME_OUT_H2, false);
-
-        gpioController.showTwentyFourSeconds(true);
-
-        return created(game);
+        gpioController.setLed(GPIOType.TIME_OUT_V1, false);
+        gpioController.setLed(GPIOType.TIME_OUT_V2, false);
     }
 
-    @POST
-    @Path("/start")
-    public Response startGame(@QueryParam(TOKEN) String token,
-                              @QueryParam("gameId") int gameId,
-                              @QueryParam(MIRRORED) boolean mirrored) {
+    public void resetTeamFouls(final Game game) {
+        if (game.getGameType() == GameType.BASKET ||
+            (game.getGameType() == GameType.BASKET_KIDS &&  game.getQuarter() % 2 == 0)) {   // every 2 quarters
 
-        final Token foundToken = tokenDAO.find(token);
-        if (foundToken == null) {
-            LOGGER.info("Invalid token: "+token);
-            return unauthorized("Invalid token");
-        }
+            final Team teamA = game.getTeamA();
+            teamA.setFouls(0);
+            teamService.save(teamA);
 
-        // Clock might be running in countdown mode
-        if (clockController.isRunning()) {
-            clockController.stop();
-        }
-
-        final Game game = gameDAO.find(gameId);
-        if (game.isMirrored()) {
-            // Init slave scoreboard
-            producerService.newGame();
-        }
-
-        //
-        // Possible fix for countdown clock when reached 0
-        //
-        // TODO  TEST !!!
-        //
-        clockController.setSeconds(game.getClock());
-
-        device.setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
-        return ok();
-    }
-
-    @Path("/list")
-    @GET
-    public List<Game> listGames(@QueryParam(FIRST) @DefaultValue("0") int first,
-                                @QueryParam(MAX) @DefaultValue("20") int max) {
-        return gameDAO.list(first, max);
-    }
-
-    @Produces("text/*")
-    @Path("/list")
-    @GET
-    public String listGamesAsText(@QueryParam(FIRST) @DefaultValue("0") int first,
-                                  @QueryParam(MAX) @DefaultValue("20") int max) {
-
-        final List<Game> games = gameDAO.list(first, max);
-
-        if (games != null && games.size() > 0) {
-            StringBuilder builder = new StringBuilder();
-
-            for (final Game game : games) {
-                builder.append(game).append("\n");
-            }
-            return builder.toString();
-        } else {
-            return "No games";
+            final Team teamB = game.getTeamB();
+            teamB.setFouls(0);
+            teamService.save(teamB);
         }
     }
 
-    @Path("/{id}")
-    @GET
-    public Response showGame(@PathParam(ID) Long id) {
-        if (id == null || id == 0) {
-            return badRequest("Game Id can't be null or zero");
-        }
-        return ok(gameDAO.find(id));
-    }
-
-    @Produces("text/*")
-    @Path("/{id}")
-    @GET
-    public String showGameAsText(@PathParam(ID) Long id) {
-        if (id == null || id == 0) {
-            return "Game Id can't be null or zero";
-        }
-        Game game = gameDAO.find(id);
-
-        if (game != null) {
-            String gameClock = String.format(", Game time:%02d:%02d", game.getClock()/60, game.getClock()%60);
-
-            return new StringBuilder().append(game.toString())
-                    .append(", Quarter:").append(game.getQuarter())
-                    .append(", Team A Fouls:").append(game.getTeamA().getFouls())
-                    .append(", Team B Fouls:").append(game.getTeamB().getFouls())
-                    .append(", Category:").append(game.getAgeCategory().getName())
-                    .append(gameClock)
-                    .append(", Type:").append(game.getGameType())
-                    .append(", Court:").append(game.getCourt())
-                    .append(", CreatedBy:").append(game.getUserName()).toString();
-        } else {
-            return "Game not found";
-        }
-    }
-
-    @Path("/{id}")
-    @DELETE
-    public Response deleteGame(@PathParam(ID) Long id,
-                               @QueryParam(TOKEN) String token) {
-
-        if (id == null || id == 0) {
-            return badRequest("Game Id can't be null or zero");
-        }
-
-        final Token foundToken = tokenDAO.find(token);
-        if (foundToken == null) {
-            return unauthorized("Invalid token");
-        }
-
-        gameDAO.delete(id);
+    /**
+     * Delete a game and clear scoreboard.
+     *
+     * @param game the game to delete
+     */
+    @Transactional
+    public void delete(Game game) {
+        gameRepository.delete(game);
         device.clearBoard();
-        return gone();
+    }
+
+    @Transactional
+    public void resetFouls(Long gameId) {
+
+        gameRepository
+            .findById(gameId)
+            .ifPresent(game -> {
+                final Team teamA = game.getTeamA();
+                teamA.setFouls(0);
+                update(teamA);
+
+                final Team teamB = game.getTeamB();
+                teamB.setFouls(0);
+                update(teamB);
+            });
+    }
+
+    @Transactional
+    public void update(final Team team) {
+
+        log.debug("team.isMirrored? " + team.isMirrored());
+
+        if (team.isMirrored()) {
+            log.info("FoulService mirroring is turned ON");
+
+            if (team.getKey().equals(TeamType.A.toString())) {
+                producerService.printFoulsA(team.getFouls());
+            } else {
+                producerService.printFoulsB(team.getFouls());
+            }
+
+            producerService.setPlayerFoul(team.getFouls());
+        }
+
+        teamService.save(team);
+
+        device.setFoul(team);
+
+        if (team.getFouls() != 0) {
+            device.setPlayerFoul(team.getFouls());
+        }
     }
 }

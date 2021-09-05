@@ -2,10 +2,11 @@ package org.janssen.scoreboard.controller;
 
 import com.pi4j.io.gpio.*;
 import org.janssen.scoreboard.model.type.GPIOType;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Asynchronous;
-import javax.ejb.Singleton;
 
 import static org.janssen.scoreboard.service.util.Constants.TWO_SECONDS_IN_MILLI;
 
@@ -13,7 +14,8 @@ import static org.janssen.scoreboard.service.util.Constants.TWO_SECONDS_IN_MILLI
  * @link http://pi4j.com/usage.html
  * @author Stephan Janssen
  */
-@Singleton
+@Component
+@Scope("singleton")
 public class GPIOController {
 
     private GpioPinDigitalOutput timeoutVisitors1;
@@ -47,7 +49,7 @@ public class GPIOController {
         twentyFourSeconds = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "24s LEDs", PinState.LOW);
     }
 
-    @Asynchronous
+    @Async
     public void setLed(final GPIOType ledType, final boolean isOn) {
         switch (ledType) {
             case TIME_OUT_H1:
@@ -68,7 +70,7 @@ public class GPIOController {
         }
     }
 
-    @Asynchronous
+    @Async
     public void setBuzz(final GPIOType buzzType, int duration) {
         switch (buzzType) {
 
@@ -91,7 +93,7 @@ public class GPIOController {
      *
      * @param buzzType the type of buzzer to play
      */
-    @Asynchronous
+    @Async
     public void setBuzz(final GPIOType buzzType) {
         setBuzz(buzzType, TWO_SECONDS_IN_MILLI);
     }
@@ -101,36 +103,35 @@ public class GPIOController {
      *
      * @param isVisible true is on
      */
-    @Asynchronous
+    @Async
     public void showTwentyFourSeconds(final boolean isVisible) {
 
         // SET 24 seconds LEDS
         if (isVisible) {
-            twentyFourSeconds.low();   // On
+            twentyFourSeconds.low();    // ON
         } else {
-            twentyFourSeconds.high();    // Off
+            twentyFourSeconds.high();    // OFF
         }
 
     }
 
-    @Asynchronous
+    /**
+     * Switch the 24 seconds LEDs on/off depending on current state.
+     */
+    @Async
     public void switchTwentyFourSeconds() {
-
         if (twentyFourSeconds.isHigh()) {
-            twentyFourSeconds.low();   // On
+            twentyFourSeconds.low();        // ON
         } else {
-            twentyFourSeconds.high();    // Off
+            twentyFourSeconds.high();       // OFF
         }
-
     }
 
     private void activateLed(final GpioPinDigitalOutput pin, final boolean isOn) {
-
         if (isOn & pin.isLow()) {
             pin.high();
         } else if (pin.isHigh()) {
             pin.low();
         }
-
     }
 }

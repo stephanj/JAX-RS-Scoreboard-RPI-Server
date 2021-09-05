@@ -1,22 +1,26 @@
-package org.janssen.scoreboard.service;
+package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.dao.TokenDAO;
 import org.janssen.scoreboard.model.Login;
 import org.janssen.scoreboard.model.Token;
 import org.janssen.scoreboard.model.User;
 import org.janssen.scoreboard.service.util.PasswordHash;
-import javax.ejb.Singleton;
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import static org.janssen.scoreboard.service.util.ResponseUtil.*;
 
@@ -25,45 +29,41 @@ import static org.janssen.scoreboard.service.util.ResponseUtil.*;
  *
  * @author Stephan Janssen
  */
-@Singleton
-@Path("/api/auth")
-@Produces({MediaType.TEXT_PLAIN})
+@RestController
+@RequestMapping("/api/auth")
 public class AuthenticateService {
 
-    private static final Logger LOGGER = Logger.getLogger(AuthenticateService.class.getName());
+    private final Logger log = LoggerFactory.getLogger(AuthenticateService.class);
 
     private static final String CONFIG_PROPERTIES = "org/janssen/scoreboard/resources/config.properties";
 
     @Inject
     private TokenDAO tokenDAO;
 
-    @Consumes(MediaType.APPLICATION_JSON)
-    @POST
-    @Path("/payload")
-    public Response loginByPayload(Login login) {
+    @PostMapping("/payload")
+    public ResponseEntity<?> loginByPayload(Login login) {
         return verifyLogin(login.getUsername(), login.getPassword());
     }
 
-    @Consumes(MediaType.APPLICATION_JSON)
-    @POST
-    @Path("/login")
-    public Response verifyLogin(@QueryParam("username") String username,
-                                @QueryParam("password") String password) {
+    @PostMapping("/login")
+    public ResponseEntity<?> verifyLogin(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password) {
 
         if (username == null || username.length() == 0) {
-            LOGGER.info("Username not defined:"+username);
-            return badRequest("Username not defined");
+            log.info("Username not defined:"+username);
+            return ResponseEntity.badRequest().body("Username not defined");
         }
 
         if (password == null || password.length() == 0) {
-            return badRequest("Password not defined");
+            return ResponseEntity.badRequest().body("Password not defined");
         }
 
         try {
             final String user = findUser(username);
             if (user == null) {
-                LOGGER.info("User does not exist:"+username);
-                return conflict("User does not exist");
+                log.info("User does not exist:"+username);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("User does not exist");
             }
 
             final User foundUser = new User(username, user);
@@ -75,47 +75,43 @@ public class AuthenticateService {
                 token.setGameType(foundUser.getGameType());
                 tokenDAO.create(token);
 
-                LOGGER.info("Token created: "+token.getValue());
+                log.info("Token created: "+token.getValue());
 
-                return ok(token.getValue());
+                return ResponseEntity.ok().body(token.getValue());
             } else {
-                LOGGER.info("Invalid login credentials:"+username);
-                return unauthorized("Invalid login credentials");
+                log.info("Invalid login credentials:"+username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid login credentials");
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+            log.error(e.getMessage());
         }
 
-        LOGGER.info("Authorisation failed for "+username);
-        return conflict("Authorisation failed");
+        log.info("Authorisation failed for "+username);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Authorisation failed");
     }
 
-    @POST
-    @Path("/password")
-    public Response passwordForgotten(@QueryParam("username") String username) {
+    @PostMapping("/password")
+    public ResponseEntity<?> passwordForgotten(
+            @RequestParam("username") String username) {
 
         if (username == null || username.length() == 0) {
-            return badRequest("Username not defined");
+            return ResponseEntity.badRequest().body("Username not defined");
         }
 
         try {
             final String user = findUser(username);
             if (user == null) {
-                return conflict("User does not exist");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("User does not exist");
             }
 
             final User foundUser = new User(username, user);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
 
-        return conflict("Authorisation failed");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Authorisation failed");
     }
 
     /**
