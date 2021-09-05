@@ -1,50 +1,37 @@
 package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.controller.GPIOController;
-import org.janssen.scoreboard.dao.TokenDAO;
-import org.janssen.scoreboard.model.Token;
 import org.janssen.scoreboard.model.type.GPIOType;
-
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import java.util.logging.Logger;
-
-import static org.janssen.scoreboard.service.util.ResponseUtil.unauthorized;
-import static org.janssen.scoreboard.service.util.ResponseUtil.ok;
+import org.janssen.scoreboard.service.util.ResponseUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Stephan Janssen
  */
-@Path("/api/attention")
-@Produces({MediaType.APPLICATION_JSON})
+@RestController
+@RequestMapping(value = "/api/attention", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AttentionService {
 
-    private static final Logger LOGGER = Logger.getLogger(AttentionService.class.getName());
+    private final Logger log = LoggerFactory.getLogger(AttentionService.class);
 
-    @Inject
-    private TokenDAO tokenDAO;
+    private final GPIOController gpioController;
 
-    @Inject
-    private GPIOController gpioController;
+    public AttentionService(GPIOController gpioController) {
+        this.gpioController = gpioController;
+    }
 
-    @Path("/")
-    @GET
-    public Response getAttention(@QueryParam("token") String token) {
-        LOGGER.info("Triggering attention buzzer");
-
-        final Token foundToken = tokenDAO.find(token);
-        if (foundToken == null) {
-            return unauthorized("Invalid token");
-        }
+    @GetMapping
+    public ResponseEntity<?> getAttention() {
+        log.debug("Triggering attention buzzer");
 
         gpioController.setBuzz(GPIOType.ATTENTION);
 
-        return ok();
+        return ResponseUtil.ok();
     }
 }

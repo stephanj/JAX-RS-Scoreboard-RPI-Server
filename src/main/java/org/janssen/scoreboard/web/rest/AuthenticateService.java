@@ -1,14 +1,13 @@
 package org.janssen.scoreboard.web.rest;
 
-import org.janssen.scoreboard.dao.TokenDAO;
 import org.janssen.scoreboard.model.Login;
 import org.janssen.scoreboard.model.Token;
 import org.janssen.scoreboard.model.User;
+import org.janssen.scoreboard.service.repository.TokenRepository;
 import org.janssen.scoreboard.service.util.PasswordHash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
 import java.util.UUID;
-
-import static org.janssen.scoreboard.service.util.ResponseUtil.*;
 
 /**
  * TODO This post should happen over HTTPS but we don't have an SSL certificate to do this :(
@@ -37,8 +34,11 @@ public class AuthenticateService {
 
     private static final String CONFIG_PROPERTIES = "org/janssen/scoreboard/resources/config.properties";
 
-    @Inject
-    private TokenDAO tokenDAO;
+    private final TokenRepository tokenRepository;
+
+    public AuthenticateService(TokenRepository tokenRepository) {
+        this.tokenRepository = tokenRepository;
+    }
 
     @PostMapping("/payload")
     public ResponseEntity<?> loginByPayload(Login login) {
@@ -73,7 +73,7 @@ public class AuthenticateService {
                 final Token token = new Token(UUID.randomUUID().toString());
                 token.setFullName(foundUser.getFullName());
                 token.setGameType(foundUser.getGameType());
-                tokenDAO.create(token);
+                tokenRepository.save(token);
 
                 log.info("Token created: "+token.getValue());
 

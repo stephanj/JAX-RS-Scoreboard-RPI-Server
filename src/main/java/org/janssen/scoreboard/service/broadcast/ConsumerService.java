@@ -1,14 +1,12 @@
 package org.janssen.scoreboard.service.broadcast;
 
 import org.janssen.scoreboard.controller.DeviceController;
+import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.model.type.GPIOType;
-
-import javax.ejb.EJB;
-import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The broadcast service receives all the info of to set the scoreboard
@@ -28,21 +26,23 @@ import javax.ws.rs.core.MediaType;
  *
  * @author Stephan Janssen
  */
-@Path("/api/broadcast/consumer")
-@Produces({MediaType.APPLICATION_JSON})
+@RestController
+@RequestMapping(value = "/api/broadcast/consumer", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ConsumerService extends AbstractBroadcaster {
 
     private static final int NO_TIMEOUTS = 0;
     private static final int ONE_TIMEOUT = 1;
 
-    @Inject
-    private DeviceController device;
+    private final DeviceController device;
 
-    @EJB
-    private org.janssen.scoreboard.controller.GPIOController GPIOController;
+    private final GPIOController GPIOController;
 
-    @POST
-    @Path(NEW_GAME)
+    public ConsumerService(DeviceController device, GPIOController GPIOController) {
+        this.device = device;
+        this.GPIOController = GPIOController;
+    }
+
+    @PostMapping(NEW_GAME)
     public void newMirroredBasketGame() {
         // Reset the score
         device.setScoreHome(0);
@@ -59,50 +59,42 @@ public class ConsumerService extends AbstractBroadcaster {
         device.setClockOnly(600);
     }
 
-    @POST
-    @Path(FOULS_A)
+    @PostMapping(FOULS_A)
     public void printFoulsHome(final int fouls) {
         device.setFoulsHome(fouls);
     }
 
-    @POST
-    @Path(FOULS_B)
+    @PostMapping(FOULS_B)
     public void printFoulsVisitors(final int fouls) {
         device.setFoulsVisitors(fouls);
     }
 
-    @POST
-    @Path(PERSONAL_FOUL)
+    @PostMapping(PERSONAL_FOUL)
     public void printPersonalFouls(final int totalPersonalFouls) {
         device.setPlayerFoul(totalPersonalFouls);
     }
 
-    @POST
-    @Path(QUARTER)
+    @PostMapping(QUARTER)
     public void printQuarter(final int quarter) {
         device.setPlayerFoul(quarter);
     }
 
-    @POST
-    @Path(HOME)
+    @PostMapping(HOME)
     public void printScoreHome(final int score) {
         device.setScoreHome(score);
     }
 
-    @POST
-    @Path(VISITORS)
+    @PostMapping(VISITORS)
     public void printScoreVisitors(final int score) {
         device.setScoreVisitors(score);
     }
 
-    @POST
-    @Path(TIME)
+    @PostMapping(TIME)
     public void printTime(final int seconds) {
         device.setClockOnly(seconds);
     }
 
-    @POST
-    @Path(TIMEOUT_HOME)
+    @PostMapping(TIMEOUT_HOME)
     public void printTimeoutHome(final int timeout) {
 
         if (timeout == NO_TIMEOUTS) {
@@ -115,8 +107,7 @@ public class ConsumerService extends AbstractBroadcaster {
         }
     }
 
-    @POST
-    @Path(TIMEOUT_VISITORS)
+    @PostMapping(TIMEOUT_VISITORS)
     public void printTimeoutVisitors(final int timeout) {
 
         // Set visitors timeout LEDs

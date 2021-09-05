@@ -5,6 +5,7 @@ import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.controller.GameClockController;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.Team;
+import org.janssen.scoreboard.model.type.AgeCategory;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.janssen.scoreboard.model.type.GameType;
 import org.janssen.scoreboard.model.type.TeamType;
@@ -16,11 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.logging.Level;
 
 import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
 import static org.janssen.scoreboard.service.util.Constants.TEN_MINUTES_IN_SECONDS;
-import static org.janssen.scoreboard.service.util.ResponseUtil.badRequest;
 
 @Service
 public class GameService {
@@ -39,7 +38,7 @@ public class GameService {
 
     private final ProducerService producerService;
 
-    private Game currentGame = null;
+    // private Game currentGame = null;
 
     public GameService(GameRepository gameRepository,
                        GameClockController gameClockController,
@@ -59,30 +58,9 @@ public class GameService {
         return gameRepository.findById(gameId);
     }
 
-    @Transactional
-    public void update(final Game game) {
-        if (game.isMirrored()) {
-            // Reset Team Fouls slave board
-            producerService.printFoulsA(0);
-            producerService.printFoulsB(0);
-
-            // Reset game clock slave board
-            producerService.printTimeInSeconds(game.getClock());
-        }
-
-        gameRepository.save(game);
-
-        // Reset Team Fouls
-        device.setFoulsHome(0);
-        device.setFoulsVisitors(0);
-
-        // Reset game clock
-        device.setClockOnly(game.getClock());
-    }
-
-    public Optional<Game> current() {
-        return Optional.of(currentGame);
-    }
+//    public Optional<Game> current() {
+//        return Optional.of(currentGame);
+//    }
 
     public void setGameClock(final Game game) {
 
@@ -218,5 +196,89 @@ public class GameService {
         if (team.getFouls() != 0) {
             device.setPlayerFoul(team.getFouls());
         }
+    }
+
+    /**
+     * Create a new game.
+     *
+     * @param teamNameA team name A
+     * @param teamNameB team name B
+     * @param gameType  game type
+     * @param ageCategory age category
+     * @param court court name
+     * @param mirrored mirrored scoreboard
+     */
+    public Game newGame(String teamNameA,
+                        String teamNameB,
+                        int gameType,
+                        int ageCategory,
+                        String court,
+                        boolean mirrored) {
+
+        // Clock might be running in countdown mode
+        if (gameClockController.isRunning()) {
+            gameClockController.stop();
+        }
+
+        final Team teamA = teamService.create(teamNameA, TeamType.A, mirrored);
+        log.info("TeamA mirroring turned on? " + teamA.isMirrored());
+
+        final Team teamB = teamService.create(teamNameB, TeamType.B, mirrored);
+        log.info("TeamB mirroring turned on? " + teamB.isMirrored());
+
+        final Game game = create(teamA, teamB, gameType, ageCategory, court, mirrored);
+
+        log.info("Game mirroring turned on? " + game.isMirrored());
+
+        if (game.isMirrored()) {
+            // Init slave scoreboard
+            producerService.newGame();
+        }
+
+        device.setGame(game);
+
+        // Reset the timeout LEDs
+        gpioController.setLed(GPIOType.TIME_OUT_V1, false);
+        gpioController.setLed(GPIOType.TIME_OUT_V2, false);
+
+        gpioController.setLed(GPIOType.TIME_OUT_H1, false);
+        gpioController.setLed(GPIOType.TIME_OUT_H2, false);
+
+        gpioController.showTwentyFourSeconds(true);
+
+        return game;
+    }
+
+    @Transactional
+    public Game create(final Team teamA,
+                       final Team teamB,
+                       final int typeNumber,
+                       final int age,
+                       final String court,
+                       final boolean mirrored) {
+
+        final Game game = new Game();
+
+        game.setUserName("na");
+        game.setCourt(court);
+        game.setMirrored(mirrored);
+
+        final GameType type = GameType.values()[typeNumber];
+        game.setGameType(type);
+        setGameClock(game);
+
+        final AgeCategory ageCategory = AgeCategory.values()[age];
+        game.setAgeCategory(ageCategory);
+
+        game.setTeamA(teamA);
+        game.setTeamB(teamB);
+        return gameRepository.save(game);
+    }
+
+    @Transactional
+    public void update(final Game game) {
+        game.setQuarter(game.getQuarter());
+        game.setClock(game.getClock());
+        gameRepository.save(game);
     }
 }

@@ -1,11 +1,9 @@
 package org.janssen.scoreboard.service.util;
 
-import org.janssen.scoreboard.model.Token;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import javax.ws.rs.core.Response;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import java.lang.reflect.Type;
-import java.net.URI;
 
 /**
  *
@@ -13,54 +11,53 @@ import java.net.URI;
  */
 public class ResponseUtil {
 
-
-    public static Response conflict(final String msg) {
-        return Response.status(Response.Status.CONFLICT).entity(msg).build();
+    public static ResponseEntity<?> conflict(final String msg) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);
     }
 
-    public static Response unauthorized() {
-        return Response.status(Response.Status.UNAUTHORIZED).build();
+    public static ResponseEntity<?> unauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    public static Response unauthorized(final String msg) {
-        return Response.status(Response.Status.UNAUTHORIZED).entity(msg).build();
+    public static ResponseEntity<?> unauthorized(final String msg) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(msg);
     }
 
 
-    public static Response badRequest() {
-        return Response.status(Response.Status.BAD_REQUEST).build();
+    public static ResponseEntity<?> badRequest() {
+        return ResponseEntity.badRequest().build();
     }
 
-    public static Response badRequest(final String msg) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(msg).build();
+    public static ResponseEntity<Object> badRequest(final String msg) {
+        return ResponseEntity.badRequest().body(msg);
     }
 
-    public static Response gone() {
-        return Response.status(Response.Status.GONE).build();
+    public static ResponseEntity<?> gone() {
+        return ResponseEntity.status(HttpStatus.GONE).build();
     }
 
-    public static Response created(final Object entity) {
-        return Response.status(Response.Status.CREATED).entity(entity).build();
+    public static ResponseEntity<?> created(final Object entity) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(entity);
     }
 
-    public static Response ok() {
-        return Response.status(Response.Status.OK).build();
+    public static ResponseEntity<Object> ok() {
+        return ResponseEntity.ok().build();
     }
 
-    public static Response ok(final String infoMessage, boolean info) {
+    public static ResponseEntity<?> ok(final String infoMessage, boolean info) {
         if (info) {
-            return Response.status(Response.Status.OK).entity(infoMessage).build();
+            return ResponseEntity.ok().body(infoMessage);
         } else {
-            return Response.status(Response.Status.OK).build();
+            return ResponseEntity.ok().build();
         }
     }
 
-    public static Response ok(final Object entity) {
-        return Response.ok(entity).build();
+    public static ResponseEntity ok(final Object entity) {
+        return ResponseEntity.ok().body(entity);
     }
 
-    public static Response ok(final Object entity, final Type type) {
-        return Response.ok(entity).build();
+    public static ResponseEntity<?> ok(final Object entity, final Type type) {
+        return ResponseEntity.ok(entity);
     }
 }
 

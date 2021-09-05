@@ -48,26 +48,26 @@ public class UtilResource {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/redraw")
-    public ResponseEntity<?> reDrawGameBoard() {
-        log.debug("Redraw scoreboard");
-
-        return gameService
-                .current()
-                .map(game -> {
-                    device.setClockOnly(game.getClock());
-
-                    device.setScore(game.getTeamA());
-                    device.setScore(game.getTeamB());
-
-                    device.setPlayerFoul(game.getQuarter());
-
-                    device.setFoul(game.getTeamA());
-                    device.setFoul(game.getTeamB());
-
-                    return ResponseEntity.ok().build();
-                }).orElse(ResponseEntity.badRequest().body("No games exist"));
-    }
+//    @PutMapping("/redraw")
+//    public ResponseEntity<?> reDrawGameBoard() {
+//        log.debug("Redraw scoreboard");
+//
+//        return gameService
+//                .current()
+//                .map(game -> {
+//                    device.setClockOnly(game.getClock());
+//
+//                    device.setScore(game.getTeamA());
+//                    device.setScore(game.getTeamB());
+//
+//                    device.setPlayerFoul(game.getQuarter());
+//
+//                    device.setFoul(game.getTeamA());
+//                    device.setFoul(game.getTeamB());
+//
+//                    return ResponseEntity.ok().build();
+//                }).orElse(ResponseEntity.badRequest().body("No games exist"));
+//    }
 
     @PutMapping("/turnoff")
     public ResponseEntity<?> turnOffScoreBoard() {

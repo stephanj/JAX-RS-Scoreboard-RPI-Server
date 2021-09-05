@@ -1,20 +1,20 @@
 package org.janssen.scoreboard.web.rest;
 
+import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GameClockController;
 import org.janssen.scoreboard.model.Game;
-import org.janssen.scoreboard.model.Team;
-import org.janssen.scoreboard.model.type.GPIOType;
-import org.janssen.scoreboard.model.type.TeamType;
 import org.janssen.scoreboard.service.GameService;
+import org.janssen.scoreboard.service.broadcast.ProducerService;
+import org.janssen.scoreboard.service.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static org.janssen.scoreboard.service.util.Constants.TWENTY_FOUR_SECONDS;
 
@@ -30,115 +30,64 @@ public class GameResource {
     private final Logger log = LoggerFactory.getLogger(GameResource.class);
 
     private static final String MIRRORED = "mirrored";
-    private static final String FIRST = "first";
-    private static final String MAX = "max";
 
     private final GameService gameService;
 
     private final GameClockController gameClockController;
 
+    private final ProducerService producerService;
+
+    private final DeviceController deviceController;
+
     public GameResource(GameService gameService,
-                        GameClockController gameClockController) {
+                        GameClockController gameClockController,
+                        DeviceController deviceController,
+                        ProducerService producerService) {
         this.gameService = gameService;
+        this.deviceController = deviceController;
         this.gameClockController = gameClockController;
+        this.producerService = producerService;
     }
 
     @PostMapping
-    public ResponseEntity<?> createGame(@RequestParam("teamA") String nameA,
-                                        @RequestParam("teamB") String nameB,
-                                        @RequestParam("type") int type,
+    public ResponseEntity<?> createGame(@RequestParam("teamA") String teamNameA,
+                                        @RequestParam("teamB") String teamNameB,
+                                        @RequestParam("type") int gameType,
                                         @RequestParam("age") int ageCategory,
                                         @RequestParam("court") String court,
-                                        @RequestParam(MIRRORED) boolean mirrored) {
+                                        @RequestParam(MIRRORED) boolean mirrored) throws URISyntaxException {
 
         log.debug("Create new game");
+
+        Game game = gameService.newGame(teamNameA, teamNameB, gameType, ageCategory, court, mirrored);
+
+        return ResponseEntity.created(new URI("/api/game/" + game.getId())).build();
+    }
+
+    @PostMapping("/start")
+    public ResponseEntity<Object> startGame(@RequestParam("gameId") Long gameId) {
+
+        log.debug("Start game");
 
         // Clock might be running in countdown mode
         if (gameClockController.isRunning()) {
             gameClockController.stop();
         }
 
-        final Team teamA = teamDAO.create(nameA, TeamType.A, mirrored);
-        log.info("TeamA mirroring turned on? " + teamA.isMirrored());
+        return gameService
+            .findGameById(gameId)
+            .map(game -> {
+                if (game.isMirrored()) {
+                    // Init slave scoreboard
+                    producerService.newGame();
+                }
 
-        final Team teamB = teamDAO.create(nameB, TeamType.B, mirrored);
-        log.info("TeamB mirroring turned on? " + teamB.isMirrored());
+                gameClockController.setSeconds(game.getClock());
 
-        final Game game = gameDAO.create(teamA, teamB, type, ageCategory, court, foundToken.getFullName(), mirrored);
+                deviceController.setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
 
-        log.info("Game mirroring turned on? " + game.isMirrored());
-
-        if (game.isMirrored()) {
-            // Init slave scoreboard
-            producerService.newGame();
-        }
-
-        device.setGame(game);
-
-        // Reset the timeout LEDs
-        gpioController.setLed(GPIOType.TIME_OUT_V1, false);
-        gpioController.setLed(GPIOType.TIME_OUT_V2, false);
-
-        gpioController.setLed(GPIOType.TIME_OUT_H1, false);
-        gpioController.setLed(GPIOType.TIME_OUT_H2, false);
-
-        gpioController.showTwentyFourSeconds(true);
-
-        return ResponseEntity.created(game).build();
-    }
-
-    @PostMapping("/start")
-    public ResponseEntity<?> startGame(@QueryParam(TOKEN) String token,
-                                       @QueryParam("gameId") int gameId,
-                                       @QueryParam(MIRRORED) boolean mirrored) {
-
-        log.debug("Start game");
-
-        // Clock might be running in countdown mode
-        if (clockController.isRunning()) {
-            clockController.stop();
-        }
-
-        final Game game = gameDAO.find(gameId);
-        if (game.isMirrored()) {
-            // Init slave scoreboard
-            producerService.newGame();
-        }
-
-        //
-        // Possible fix for countdown clock when reached 0
-        //
-        // TODO  TEST !!!
-        //
-        clockController.setSeconds(game.getClock());
-
-        device.setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
-
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping(value = "list", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Game> listGames(@RequestParam(FIRST) @DefaultValue("0") int first,
-                                @RequestParam(MAX) @DefaultValue("20") int max) {
-        return gameService.findAll(first, max);
-    }
-
-    @GetMapping(value = "list", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String listGamesAsText(@RequestParam(FIRST) @DefaultValue("0") int first,
-                                  @RequestParam(MAX) @DefaultValue("20") int max) {
-
-        final List<Game> games = gameService.findAll(first, max);
-
-        if (games != null && games.size() > 0) {
-            StringBuilder builder = new StringBuilder();
-
-            for (final Game game : games) {
-                builder.append(game).append("\n");
-            }
-            return builder.toString();
-        } else {
-            return "No games";
-        }
+                return ResponseUtil.ok();
+            }).orElse(ResponseUtil.badRequest("Game not found"));
     }
 
     @GetMapping("{gameId}")

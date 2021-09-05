@@ -1,6 +1,8 @@
 package org.janssen.scoreboard.controller;
 
 import org.janssen.scoreboard.model.type.GPIOType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,8 @@ import static org.janssen.scoreboard.service.util.Constants.*;
 @Component
 @Scope("singleton")
 public class TwentyFourClockController {
+
+    private final Logger log = LoggerFactory.getLogger(TwentyFourClockController.class);
 
     // We start at 1 this way it will take max. 99ms
     // to update the clock when "start" has been signaled!
@@ -71,6 +75,8 @@ public class TwentyFourClockController {
 
     public synchronized void start() {
 
+        log.debug("Start 24s clock");
+
         if (!isRunning && twentyFourSeconds > 0) {
 
             if (twentyFourSeconds == TWENTY_FOUR_SECONDS) {
@@ -83,6 +89,8 @@ public class TwentyFourClockController {
     }
 
     public synchronized void stop() {
+        log.debug("Stop 24s clock");
+
         if (isRunning) {
             isRunning =  false;
         }
@@ -93,6 +101,8 @@ public class TwentyFourClockController {
     }
 
     public void setFourTeen() {
+        log.debug("Set 14s clock");
+
         boolean wasRunning = isRunning();
 
         if (isRunning()) {
@@ -113,6 +123,8 @@ public class TwentyFourClockController {
     }
 
     public void setTwentyFourSeconds(final int twentyFourSeconds) {
+        log.debug("Set 24s clock");
+
         boolean wasRunning = isRunning();
 
         if (isRunning()) {

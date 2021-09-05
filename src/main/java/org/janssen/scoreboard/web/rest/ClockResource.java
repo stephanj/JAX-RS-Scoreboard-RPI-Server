@@ -1,9 +1,9 @@
 package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.controller.GameClockController;
-import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.type.GameType;
 import org.janssen.scoreboard.service.GameService;
+import org.janssen.scoreboard.service.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
 import static org.janssen.scoreboard.service.util.Constants.TEN_MINUTES_IN_SECONDS;
-import static org.janssen.scoreboard.service.util.ResponseUtil.badRequest;
-import static org.janssen.scoreboard.service.util.ResponseUtil.ok;
 
 /**
  * The clock service
@@ -50,13 +48,13 @@ public class ClockResource {
                 .findGameById(gameId)
                 .map(game -> {
                     int time = game.getClock() - gameClockController.getSeconds();
-                    return ResponseEntity.ok().body(Integer.toString(time));
+                    return ResponseUtil.ok(Integer.toString(time));
                 })
-                .orElse(ResponseEntity.badRequest().body("Game not found"));
+                .orElse(ResponseUtil.badRequest("Game not found"));
     }
 
     @PutMapping("/start/{gameId}")
-    public ResponseEntity<?> startClock(
+    public ResponseEntity<Object> startClock(
             @PathVariable("gameId") Long gameId) {
 
         log.debug("Start clock for game with id {} ", gameId);
@@ -77,9 +75,9 @@ public class ClockResource {
                         } else {
                             log.info("Start clock but is 0");
                         }
-                        return ResponseEntity.ok().build();
+                        return ResponseUtil.ok();
                     })
-                    .orElse(ResponseEntity.badRequest().body("Game not found"));
+                    .orElse(ResponseUtil.badRequest("Game not found"));
         }
         return ResponseEntity.badRequest().body("Clock is running");
     }
@@ -94,12 +92,11 @@ public class ClockResource {
         }
 
         gameClockController.start(seconds, GameType.BASKET, mirrored);
-        return ResponseEntity.ok().build();
+        return ResponseUtil.ok();
     }
 
     @PutMapping("/stop/{gameId}")
-    public ResponseEntity<?> stopClock(
-            @PathVariable("gameId") Long gameId) {
+    public ResponseEntity<?> stopClock(@PathVariable("gameId") Long gameId) {
 
         log.debug("Stop clock for game with id {} ", gameId);
 
@@ -113,20 +110,16 @@ public class ClockResource {
 
             gameClockController.stop();
 
-            final Game game = gameDAO.find(gameId);
-            if (game == null) {
-                String msg = String.format("Wedstrijd ID %d niet gevonden, start 'New Game'", gameId);
-                LOGGER.info(msg);
-                return badRequest(msg);
-            } else {
-                game.setClock(clockController.getSeconds());
-                gameDAO.update(game);
-                LOGGER.info("OK");
-                return ok();
-            }
-        } else {
-            return badRequest("Klok is niet actief, dus kan je ook niet stoppen");
+            return gameService
+                .findGameById(gameId)
+                .map(game -> {
+                    game.setClock(gameClockController.getSeconds());
+                    gameService.update(game);
+                    return ResponseEntity.ok().build();
+                }).orElse(ResponseEntity.badRequest().body("Wedstrijd niet gevonden, start 'New Game"));
         }
+
+        return ResponseEntity.badRequest().body("Klok is niet actief, dus kan je ook niet stoppen");
     }
 
     @PutMapping("/inc/{gameId}")
@@ -142,35 +135,29 @@ public class ClockResource {
                 return ResponseEntity.badRequest().body(String.format("Wedstrijd ID (%d) is verkeerd, start 'New Game'.", gameId));
             }
 
-            // Update persistent game clock
-            final Game game = gameDAO.find(gameId);
-            if (game == null) {
-                String msg = String.format("Wedstrijd ID %d niet gevonden, start 'New Game'", gameId);
-                log.info(msg);
-                return badRequest(msg);
-            }
+            return gameService
+                .findGameById(gameId)
+                .map(game -> {
+                    Integer clock = game.getClock();
+                    if (clock < TEN_MINUTES_IN_SECONDS) {
 
-            Integer clock = game.getClock();
+                        if (game.getGameType() == GameType.BASKET_KIDS && clock >= FOUR_MINUTES) {
+                            return ResponseEntity.badRequest().body("Can't be higher than 4 min. for kids basket");
+                        }
 
-            if (clock < TEN_MINUTES_IN_SECONDS) {
+                        clock += seconds;
+                        game.setClock(clock);
+                        gameService.update(game);
 
-                if (game.getGameType() == GameType.BASKET_KIDS &&
-                    clock >= FOUR_MINUTES) {
-                    return badRequest("Can't be higher than 4 min. for kids basket");
-                }
-
-                clock+=seconds;
-                game.setClock(clock);
-                gameDAO.update(game);
-
-                clockController.setSeconds(clock);
-                return ok();
-            } else {
-                return badRequest("Can't be higher than 10 min.");
-            }
-        } else {
-            return badRequest("Not allowed, clock is still running");
+                        gameClockController.setSeconds(clock);
+                        return ResponseEntity.ok().build();
+                    } else {
+                        return ResponseEntity.badRequest().body("Can't be higher than 10 min.");
+                    }
+                }).orElse(ResponseEntity.badRequest().body("Game niet gevonden"));
         }
+
+        return ResponseEntity.badRequest().body("Not allowed, clock is still running");
     }
 
     @PutMapping("/dec/{gameId}")
@@ -181,30 +168,28 @@ public class ClockResource {
         if (gameClockController.isNotRunning()) {
 
             if (gameId == null || gameId == 0) {
-                return badRequest(String.format("Wedstrijd ID (%d) is verkeerd, start 'New Game'.", gameId));
+                String msg = String.format("Wedstrijd ID (%d) is verkeerd, start 'New Game'.", gameId);
+                return ResponseEntity.badRequest().body(msg);
             }
 
-            // Update persistent game clock
-            final Game game = gameDAO.find(gameId);
-            if (game == null) {
-                String msg = String.format("Wedstrijd ID %d niet gevonden, start 'New Game'", gameId);
-                LOGGER.info(msg);
-                return badRequest(msg);
-            }
+            return gameService
+                .findGameById(gameId)
+                .map(game -> {
+                    Integer clock = game.getClock();
+                    if (clock - seconds >= 0) {
+                        clock -= seconds;
+                        game.setClock(clock);
+                        gameService.update(game);
 
-            Integer clock = game.getClock();
-            if (clock - seconds >= 0) {
-                clock -= seconds;
-                game.setClock(clock);
-                gameDAO.update(game);
-
-                clockController.setSeconds(clock);
-                return ok();
-            } else {
-                return badRequest("Can't have a negative clock");
-            }
+                        gameClockController.setSeconds(clock);
+                        return ResponseEntity.ok().build();
+                    } else {
+                        return ResponseEntity.badRequest().body("Can't have a negative clock");
+                    }
+                })
+                .orElse(ResponseEntity.badRequest().body("Game niet gevonden"));
         } else {
-            return badRequest("Not allowed, clock is still running");
+            return ResponseEntity.badRequest().body("Not allowed, clock is still running");
         }
     }
 }
