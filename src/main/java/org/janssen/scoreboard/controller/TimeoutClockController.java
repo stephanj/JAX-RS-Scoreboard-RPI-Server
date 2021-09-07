@@ -27,7 +27,12 @@ public class TimeoutClockController {
 
     private final GPIOController gpioController;
 
-    private final TimerTask timeoutClockTask;
+    private final TimerTask timeoutClockTask = new TimerTask() {
+        @Override
+        public void run() {
+            clockTask();
+        }
+    };
 
     public TimeoutClockController(DeviceController device,
                                   GPIOController gpioController,
@@ -36,12 +41,6 @@ public class TimeoutClockController {
         this.gpioController = gpioController;
         this.twentyFourClockController = twentyFourClockController;
 
-        timeoutClockTask = new TimerTask() {
-            @Override
-            public void run() {
-                clockTask();
-            }
-        };
     }
 
     private int twentyFourSecondsValue;
@@ -73,6 +72,8 @@ public class TimeoutClockController {
     }
 
     private void clockTask() {
+
+        log.debug(">>>> timeout clock @ {}", timeoutValue);
 
         timeoutValue--;
 

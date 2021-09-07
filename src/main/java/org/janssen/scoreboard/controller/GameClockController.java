@@ -138,7 +138,7 @@ public class GameClockController {
     }
 
     private void setClock() {
-        log.debug("set clock");
+        log.debug("set clock {}", currentTimeInSeconds);
 
         if (mirrored) {
             producerService.printTimeInSeconds(currentTimeInSeconds);

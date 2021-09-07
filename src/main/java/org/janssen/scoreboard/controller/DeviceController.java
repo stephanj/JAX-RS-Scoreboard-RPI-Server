@@ -7,6 +7,7 @@ import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.TeamType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -131,6 +132,7 @@ public class DeviceController {
     }
 
     public void setGame(final Game game) {
+        log.debug(">>> Set game {}", game);
 
         twentyFourClockController.setTwentyFourSeconds(TWENTY_FOUR_SECONDS);
         gameClockController.setSeconds(game.getClock());
@@ -143,7 +145,8 @@ public class DeviceController {
         setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
     }
 
-    private void execute(final String cmd) {
+    @Async
+    public void execute(final String cmd) {
         final CommandLine cmdLine = CommandLine.parse(cmd);
         try {
             executor.execute(cmdLine);

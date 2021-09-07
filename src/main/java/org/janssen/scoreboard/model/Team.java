@@ -20,6 +20,7 @@ public class Team extends Model {
 
     private Integer timeOut = 0;
 
+    // Used to duplicate the game mirroring state
     private Boolean mirrored = false;
 
     public String getKey() {

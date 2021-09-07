@@ -230,16 +230,15 @@ public class GameService {
         }
 
         final Team teamA = teamService.create(teamNameA, TeamType.A, mirrored);
-        log.info("TeamA mirroring turned on? " + teamA.isMirrored());
 
         final Team teamB = teamService.create(teamNameB, TeamType.B, mirrored);
-        log.info("TeamB mirroring turned on? " + teamB.isMirrored());
 
         final Game game = create(teamA, teamB, gameType, ageCategory, court, mirrored);
 
-        log.info("Game mirroring turned on? " + game.isMirrored());
 
         if (game.isMirrored()) {
+            log.info("Game mirroring turned on");
+
             // Init slave scoreboard
             producerService.newGame();
         }

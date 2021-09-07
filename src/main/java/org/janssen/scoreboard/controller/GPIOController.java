@@ -67,7 +67,7 @@ public class GPIOController {
 
     @Async
     public void setLed(final GPIOType ledType, final boolean isOn) {
-        log.debug("Set led");
+        log.debug(">>>> Set LED");
 
         if (runningOnRPI) {
             switch (ledType) {
@@ -92,7 +92,7 @@ public class GPIOController {
 
     @Async
     public void setBuzz(final GPIOType buzzType, int duration) {
-        log.debug("Set buzz");
+        log.debug(">>>> Set BUZZ");
 
         if (runningOnRPI) {
             switch (buzzType) {
