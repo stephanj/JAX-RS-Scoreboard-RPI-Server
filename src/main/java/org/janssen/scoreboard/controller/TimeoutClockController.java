@@ -5,11 +5,8 @@ import org.janssen.scoreboard.model.type.GPIOType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
 
 /**
  * The 60s clock controller.
@@ -28,6 +25,12 @@ public class TimeoutClockController {
 
     private final GPIOController gpioController;
 
+    private int twentyFourSecondsValue;
+
+    private int timeoutValue;
+
+    private boolean isRunning = false;
+
     public TimeoutClockController(DeviceController device,
                                   GPIOController gpioController,
                                   TwentyFourClockController twentyFourClockController) {
@@ -35,21 +38,6 @@ public class TimeoutClockController {
         this.gpioController = gpioController;
         this.twentyFourClockController = twentyFourClockController;
     }
-
-    private int twentyFourSecondsValue;
-
-    private int timeoutValue;
-
-    final TimerTask timeoutClockTask = new TimerTask() {
-        @Override
-        public void run() {
-            clockTask();
-        }
-    };
-
-    private Timer timer;
-
-    private boolean isRunning = false;
 
     public synchronized void start() {
 
@@ -64,9 +52,6 @@ public class TimeoutClockController {
 
             twentyFourSecondsValue = twentyFourClockController.getTwentyFourSeconds();
 
-            timer = new Timer(UUID.randomUUID().toString());
-            timer.scheduleAtFixedRate(timeoutClockTask, 0, 1000);
-
             isRunning = true;
         }
     }
@@ -77,32 +62,34 @@ public class TimeoutClockController {
 
         if (isRunning) {
             isRunning = false;
-            timer.cancel();
-            timer.purge();
             device.setTwentyFour(twentyFourSecondsValue);
         }
     }
 
+    @Scheduled(initialDelay = 0, fixedDelay = 1000)
     private void clockTask() {
 
-        log.debug(">>>> timeout clock @ {}", timeoutValue);
+        if (isRunning) {
 
-        timeoutValue--;
+            log.debug(">>>> timeout clock @ {}", timeoutValue);
 
-        device.setTwentyFour(timeoutValue);
+            timeoutValue--;
 
-        if (timeoutValue == 10) {
-            gpioController.setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
-        }
+            device.setTwentyFour(timeoutValue);
 
-        if (timeoutValue <= ZERO_SECONDS) {
+            if (timeoutValue == 10) {
+                gpioController.setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
+            }
 
-            stop();
+            if (timeoutValue <= ZERO_SECONDS) {
 
-            // Reset 24s to original value
-            device.setTwentyFour(twentyFourSecondsValue);
+                stop();
 
-            gpioController.setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
+                // Reset 24s to original value
+                device.setTwentyFour(twentyFourSecondsValue);
+
+                gpioController.setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
+            }
         }
     }
 
