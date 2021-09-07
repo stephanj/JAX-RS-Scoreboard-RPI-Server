@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 /**
  * The 60s clock controller.
@@ -63,7 +64,7 @@ public class TimeoutClockController {
 
             twentyFourSecondsValue = twentyFourClockController.getTwentyFourSeconds();
 
-            timer = new Timer("gameClock");
+            timer = new Timer(UUID.randomUUID().toString());
             timer.scheduleAtFixedRate(timeoutClockTask, 0, 1000);
 
             isRunning = true;
@@ -77,6 +78,7 @@ public class TimeoutClockController {
         if (isRunning) {
             isRunning = false;
             timer.cancel();
+            timer.purge();
             device.setTwentyFour(twentyFourSecondsValue);
         }
     }
