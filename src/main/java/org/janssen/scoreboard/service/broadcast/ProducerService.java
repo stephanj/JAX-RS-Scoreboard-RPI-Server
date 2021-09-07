@@ -40,52 +40,44 @@ public class ProducerService extends AbstractBroadcaster {
         httpclient.getConnectionManager().shutdown();
     }
 
-    @Async
     public void printFoulsA(final int foul) {
         postData(FOULS_A, foul);
     }
 
-    @Async
     public void printFoulsB(final int foul) {
         postData(FOULS_B, foul);
     }
 
-    @Async
     public void setPlayerFoul(final int totalPersonaFoul) {
         postData(PERSONAL_FOUL, totalPersonaFoul);
     }
 
-    @Async
     public void printHomeScore(final int score) {
         postData(HOME, score);
     }
 
-    @Async
     public void printVisitorsScore(final int score) {
         postData(VISITORS, score);
     }
 
-    @Async
     public void printTimeInSeconds(final int seconds) {
         postData(TIME, seconds);
     }
 
-    @Async
     public void printHomeTimeout(final int timeout) {
         postData(TIMEOUT_HOME, timeout);
     }
 
-    @Async
     public void printVisitorsTimeout(final int timeout) {
         postData(TIMEOUT_VISITORS, timeout);
     }
 
-    @Async
     public void newGame() {
         postData(NEW_GAME, 0);
     }
 
-    private void postData(final String path, final int foul) {
+    @Async
+    public void postData(final String path, final int foul) {
         try {
             HttpPost httppost = new HttpPost(BASE_URL + path);
             httppost.setEntity(new StringEntity("" + foul));

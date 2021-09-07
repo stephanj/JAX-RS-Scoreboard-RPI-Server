@@ -7,7 +7,6 @@ import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.TeamType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -62,7 +61,6 @@ public class DeviceController {
         executor.setExitValue(1);
     }
 
-    @Async
     public void setScore(final Team team) {
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setScoreHome(team.getScore());
@@ -71,17 +69,14 @@ public class DeviceController {
         }
     }
 
-    @Async
     public void setScoreHome(final int score) {
         execute(String.format("%s -h%03d", cmd_score, score));
     }
 
-    @Async
     public void setScoreVisitors(final int score) {
         execute(String.format("%s -v%03d", cmd_score, score));
     }
 
-    @Async
     public void setPlayerFoul(final int foul) {
         execute(String.format("%s -q%d", cmd_score, foul));
 
@@ -94,7 +89,6 @@ public class DeviceController {
         execute(String.format("%s -q%d", cmd_score, 0));
     }
 
-    @Async
     public void setFoul(final Team team) {
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setFoulsHome(team.getFouls());
@@ -103,22 +97,18 @@ public class DeviceController {
         }
     }
 
-    @Async
     public void setFoulsHome(final int fouls) {
         execute(String.format("%s -a%d", cmd_score, fouls));
     }
 
-    @Async
     public void turnOff() {
         execute(String.format("%s -z", cmd_score));
     }
 
-    @Async
     public void setFoulsVisitors(final int fouls) {
         execute(String.format("%s -b%d", cmd_score, fouls));
     }
 
-    @Async
     public void setAllClocks(final int seconds, final int twentyFourSeconds) {
         setClockOnly(seconds);
         execute(String.format("%s -t%02d", cmd_score, twentyFourSeconds));
@@ -128,17 +118,14 @@ public class DeviceController {
         execute(String.format("%s -k%02d%02d", cmd_score, seconds/60, seconds%60));
     }
 
-    @Async
     public void setTwentyFour(final int seconds) {
         execute(String.format("%s -t%02d", cmd_score, seconds));
     }
 
-    @Async
     public void clearBoard() {
         execute(String.format("%s -z", cmd_score));
     }
 
-    @Async
     public void setScoreboard(final String value) {
         execute(String.format("%s -f%s", cmd_score, value));
     }
