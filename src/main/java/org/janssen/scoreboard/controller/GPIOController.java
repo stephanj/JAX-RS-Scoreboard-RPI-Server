@@ -1,9 +1,11 @@
 package org.janssen.scoreboard.controller;
 
 import com.pi4j.io.gpio.*;
+import org.janssen.scoreboard.config.ApplicationProperties;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -35,10 +37,12 @@ public class GPIOController {
 
     private GpioPinDigitalOutput twentyFourSeconds;
 
+    @Value("${running.on.rpi}")
+    private boolean runningOnRPI;
+
     @PostConstruct
     public void init() {
-
-        try {
+        if (runningOnRPI) {
             final GpioController gpio = GpioFactory.getInstance();
 
             // Timeout LEDs
@@ -57,8 +61,8 @@ public class GPIOController {
 
             log.info("Scoreboard startup buzzer.... PING  :)");
             setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
-        } catch(UnsatisfiedLinkError e) {
-            log.error(e.getMessage());
+        } else {
+            log.info(">>>> NOT RUNNING ON RPI !!");
         }
     }
 
@@ -66,22 +70,24 @@ public class GPIOController {
     public void setLed(final GPIOType ledType, final boolean isOn) {
         log.debug("Set led");
 
-        switch (ledType) {
-            case TIME_OUT_H1:
-                activateLed(timeoutHome1, isOn);
-                break;
+        if (runningOnRPI) {
+            switch (ledType) {
+                case TIME_OUT_H1:
+                    activateLed(timeoutHome1, isOn);
+                    break;
 
-            case TIME_OUT_H2:
-                activateLed(timeoutHome2, isOn);
-                break;
+                case TIME_OUT_H2:
+                    activateLed(timeoutHome2, isOn);
+                    break;
 
-            case TIME_OUT_V1:
-                activateLed(timeoutVisitors1, isOn);
-                break;
+                case TIME_OUT_V1:
+                    activateLed(timeoutVisitors1, isOn);
+                    break;
 
-            case TIME_OUT_V2:
-                activateLed(timeoutVisitors2, isOn);
-                break;
+                case TIME_OUT_V2:
+                    activateLed(timeoutVisitors2, isOn);
+                    break;
+            }
         }
     }
 
@@ -89,19 +95,21 @@ public class GPIOController {
     public void setBuzz(final GPIOType buzzType, int duration) {
         log.debug("Set buzz");
 
-        switch (buzzType) {
+        if (runningOnRPI) {
+            switch (buzzType) {
 
-            case END_QUARTER:
-                endQuarter.pulse(duration, true);
-                break;
+                case END_QUARTER:
+                    endQuarter.pulse(duration, true);
+                    break;
 
-            case END_TWENTY_FOUR:
-                endTwentyFourSeconds.pulse(duration, true);
-                break;
+                case END_TWENTY_FOUR:
+                    endTwentyFourSeconds.pulse(duration, true);
+                    break;
 
-            case ATTENTION:
-                attentionRefs.pulse(duration, true);
-                break;
+                case ATTENTION:
+                    attentionRefs.pulse(duration, true);
+                    break;
+            }
         }
     }
 
@@ -124,13 +132,14 @@ public class GPIOController {
     public void showTwentyFourSeconds(final boolean isVisible) {
         log.debug("Show 24s");
 
-        // SET 24 seconds LEDS
-        if (isVisible) {
-            twentyFourSeconds.low();    // ON
-        } else {
-            twentyFourSeconds.high();    // OFF
+        if (runningOnRPI) {
+            // SET 24 seconds LEDS
+            if (isVisible) {
+                twentyFourSeconds.low();    // ON
+            } else {
+                twentyFourSeconds.high();    // OFF
+            }
         }
-
     }
 
     /**
@@ -140,10 +149,12 @@ public class GPIOController {
     public void switchTwentyFourSeconds() {
         log.debug("Switch 24s");
 
-        if (twentyFourSeconds.isHigh()) {
-            twentyFourSeconds.low();        // ON
-        } else {
-            twentyFourSeconds.high();       // OFF
+        if (runningOnRPI) {
+            if (twentyFourSeconds.isHigh()) {
+                twentyFourSeconds.low();        // ON
+            } else {
+                twentyFourSeconds.high();       // OFF
+            }
         }
     }
 

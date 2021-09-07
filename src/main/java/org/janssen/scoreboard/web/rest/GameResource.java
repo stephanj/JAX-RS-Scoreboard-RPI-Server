@@ -8,6 +8,7 @@ import org.janssen.scoreboard.service.broadcast.ProducerService;
 import org.janssen.scoreboard.service.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,6 @@ import static org.janssen.scoreboard.service.util.Constants.TWENTY_FOUR_SECONDS;
 public class GameResource {
 
     private final Logger log = LoggerFactory.getLogger(GameResource.class);
-
-    private static final String MIRRORED = "mirrored";
 
     private final GameService gameService;
 
@@ -52,12 +51,12 @@ public class GameResource {
     @PostMapping
     public ResponseEntity<?> createGame(@RequestParam("teamA") String teamNameA,
                                         @RequestParam("teamB") String teamNameB,
-                                        @RequestParam("type") int gameType,
-                                        @RequestParam("age") int ageCategory,
+                                        @RequestParam("type")  int gameType,
+                                        @RequestParam("age")   int ageCategory,
                                         @RequestParam("court") String court,
-                                        @RequestParam(MIRRORED) boolean mirrored) throws URISyntaxException {
+                                        @RequestParam("mirrored") boolean mirrored) throws URISyntaxException {
 
-        log.debug("Create new game");
+        log.debug("Create new game for home team : {} and away team : {}", teamNameA, teamNameB);
 
         Game game = gameService.newGame(teamNameA, teamNameB, gameType, ageCategory, court, mirrored);
 
@@ -67,7 +66,7 @@ public class GameResource {
     @PostMapping("/start")
     public ResponseEntity<Object> startGame(@RequestParam("gameId") Long gameId) {
 
-        log.debug("Start game");
+        log.debug(">>>>> Start game for {}", gameId);
 
         // Clock might be running in countdown mode
         if (gameClockController.isRunning()) {
@@ -77,6 +76,8 @@ public class GameResource {
         return gameService
             .findGameById(gameId)
             .map(game -> {
+                log.debug(">>>>> Game found, set clock");
+
                 if (game.isMirrored()) {
                     // Init slave scoreboard
                     producerService.newGame();
@@ -92,6 +93,7 @@ public class GameResource {
 
     @GetMapping("{gameId}")
     public ResponseEntity<?> findGameById(@PathVariable("gameId") Long gameId) {
+        log.debug(">>>>> Find game by id {}", gameId);
 
         if (gameId == null || gameId == 0) {
             return ResponseEntity.badRequest().body("Game Id can't be null or zero");
@@ -101,6 +103,12 @@ public class GameResource {
                 .findGameById(gameId)
                 .map(game -> ResponseEntity.ok().body(game))
                 .orElse(ResponseEntity.badRequest().build());
+    }
+
+    @GetMapping("list")
+    public ResponseEntity<?> listGame() {
+        log.debug(">>>>> List games");
+        return ResponseEntity.ok().body(gameService.findAll());
     }
 
     @GetMapping(value = "{gameId}", produces = MediaType.TEXT_PLAIN_VALUE)

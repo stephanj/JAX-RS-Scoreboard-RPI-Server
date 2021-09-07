@@ -45,14 +45,16 @@ public class DeviceController {
 
     final DefaultExecutor executor = new DefaultExecutor();
 
-    private final GameClockController gameClockController;
+    private GameClockController gameClockController;
 
-    private final TwentyFourClockController twentyFourClockController;
+    private TwentyFourClockController twentyFourClockController;
 
-    public DeviceController(GameClockController gameClockController,
-                            TwentyFourClockController twentyFourClockController) {
-        this.gameClockController = gameClockController;
+    public void setTwentyFourClockController(TwentyFourClockController twentyFourClockController) {
         this.twentyFourClockController = twentyFourClockController;
+    }
+
+    public void setGameClockController(GameClockController gameClockController) {
+        this.gameClockController = gameClockController;
     }
 
     @PostConstruct

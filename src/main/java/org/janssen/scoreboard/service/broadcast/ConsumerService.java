@@ -44,16 +44,14 @@ public class ConsumerService extends AbstractBroadcaster {
 
     @PostMapping(NEW_GAME)
     public void newMirroredBasketGame() {
-        // Reset the score
+        // Reset Home team
         device.setScoreHome(0);
-        device.setScoreVisitors(0);
-
-        // Reset the fouls
         device.setFoulsHome(0);
-        device.setFoulsVisitors(0);
-
-        // Reset the timeouts
         printTimeoutHome(NO_TIMEOUTS);
+
+        // Reset visiting team
+        device.setScoreVisitors(0);
+        device.setFoulsVisitors(0);
         printTimeoutVisitors(NO_TIMEOUTS);
 
         device.setClockOnly(600);

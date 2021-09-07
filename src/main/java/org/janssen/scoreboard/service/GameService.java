@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
@@ -58,9 +59,9 @@ public class GameService {
         return gameRepository.findById(gameId);
     }
 
-//    public Optional<Game> current() {
-//        return Optional.of(currentGame);
-//    }
+    public List<Game> findAll() {
+        return gameRepository.findAll();
+    }
 
     public void setGameClock(final Game game) {
 
@@ -208,6 +209,7 @@ public class GameService {
      * @param court court name
      * @param mirrored mirrored scoreboard
      */
+    @Transactional
     public Game newGame(String teamNameA,
                         String teamNameB,
                         int gameType,

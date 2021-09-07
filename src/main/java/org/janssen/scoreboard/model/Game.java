@@ -124,16 +124,18 @@ public class Game extends DatedModel {
         this.mirrored = mirrored;
     }
 
+    @Override
     public String toString() {
-
-        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss EEE, d MMM yyyy");
-        final String formatDate = simpleDateFormat.format(getCreatedOn());
-
-        return new StringBuilder()
-               .append(getId()).append(") ")
-               .append(teamA.getName()).append(" Vs ").append(teamB.getName())
-               .append("   ")
-               .append(teamA.getScore()).append(" - ").append(teamB.getScore())
-               .append("  (").append(formatDate).append(")").toString();
+        return "Game{" +
+            "userName='" + userName + '\'' +
+            ", teamA=" + teamA +
+            ", teamB=" + teamB +
+            ", gameType=" + gameType +
+            ", ageCategory=" + ageCategory +
+            ", quarter=" + quarter +
+            ", clock=" + clock +
+            ", court='" + court + '\'' +
+            ", mirrored=" + mirrored +
+            '}';
     }
 }

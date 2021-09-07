@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+
 import static org.janssen.scoreboard.service.util.Constants.FOOTBALL_DURATION;
 import static org.janssen.scoreboard.service.util.Constants.ZERO_SECONDS;
 
@@ -53,9 +56,14 @@ public class GameClockController {
         this.producerService = producerService;
     }
 
+    @PostConstruct
+    public void postConstruct() {
+        device.setGameClockController(this);
+    }
+
     private boolean mirrored = false;
 
-    @Scheduled(initialDelay = 0, fixedDelay = 1000)
+    @Scheduled(initialDelay = 0, fixedDelay = 100)
     public void init() {
 
         if (isRunning) {

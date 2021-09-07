@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 import static org.janssen.scoreboard.service.util.Constants.*;
 
 /**
@@ -45,7 +47,16 @@ public class TwentyFourClockController {
         this.gpioController = gpioController;
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 1000)
+    @PostConstruct
+    public void postConstruct() {
+        device.setTwentyFourClockController(this);
+    }
+
+    /**
+     * Method is called every 100ms so we have a faster time trigger for 24s clock.
+     * We only update the clock every second :)
+     */
+    @Scheduled(initialDelay = 0, fixedDelay = 100)
     public void twentyFourSecondsClock() {
 
         if (isRunning) {
