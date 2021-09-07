@@ -124,7 +124,6 @@ public class DeviceController {
         execute(String.format("%s -t%02d", cmd_score, twentyFourSeconds));
     }
 
-    @Async
     public void setClockOnly(final int seconds) {
         execute(String.format("%s -k%02d%02d", cmd_score, seconds/60, seconds%60));
     }
