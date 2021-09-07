@@ -27,25 +27,24 @@ public class TimeoutClockController {
 
     private final GPIOController gpioController;
 
-    private final TimerTask timeoutClockTask = new TimerTask() {
-        @Override
-        public void run() {
-            clockTask();
-        }
-    };
-
     public TimeoutClockController(DeviceController device,
                                   GPIOController gpioController,
                                   TwentyFourClockController twentyFourClockController) {
         this.device = device;
         this.gpioController = gpioController;
         this.twentyFourClockController = twentyFourClockController;
-
     }
 
     private int twentyFourSecondsValue;
 
     private int timeoutValue;
+
+    final TimerTask timeoutClockTask = new TimerTask() {
+        @Override
+        public void run() {
+            clockTask();
+        }
+    };
 
     private Timer timer;
 
@@ -71,6 +70,17 @@ public class TimeoutClockController {
         }
     }
 
+    public synchronized void stop() {
+
+        log.debug(">>>> Stop timeout clock");
+
+        if (isRunning) {
+            isRunning = false;
+            timer.cancel();
+            device.setTwentyFour(twentyFourSecondsValue);
+        }
+    }
+
     private void clockTask() {
 
         log.debug(">>>> timeout clock @ {}", timeoutValue);
@@ -91,16 +101,6 @@ public class TimeoutClockController {
             device.setTwentyFour(twentyFourSecondsValue);
 
             gpioController.setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
-        }
-    }
-
-    public synchronized void stop() {
-
-        log.debug(">>>> Stop timeout clock");
-
-        if (isRunning) {
-            timer.cancel();
-            device.setTwentyFour(twentyFourSecondsValue);
         }
     }
 
