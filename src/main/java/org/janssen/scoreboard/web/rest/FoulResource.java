@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/api/foul", produces = MediaType.APPLICATION_JSON_VALUE)
 public class FoulResource {
 
+    public static final int MAX_TEAM_FOULS = 5;
     private final Logger log = LoggerFactory.getLogger(FoulResource.class);
 
     private final TeamService teamService;
@@ -65,9 +66,9 @@ public class FoulResource {
     @PutMapping("/inc/{teamId}/{totalFouls}")
     public ResponseEntity<?> incrementFouls(
             @PathVariable("teamId") Long teamId,
-            @PathVariable("totalFouls") Integer totalFouls) {
+            @PathVariable("totalFouls") Integer playerFouls) {
 
-        log.debug("Increment fouls for team {} with value {}", teamId, totalFouls);
+        log.debug("Increment fouls for team {} with player fouls {}", teamId, playerFouls);
 
         if (teamId == null || teamId == 0) {
             return ResponseEntity.badRequest().body("Team id can't be null or zero");
@@ -77,7 +78,7 @@ public class FoulResource {
                 .findById(teamId)
                 .map(team -> {
                     int fouls = team.getFouls();
-                    if (fouls < 5) {
+                    if (fouls < MAX_TEAM_FOULS) {
                         team.setFouls(++fouls);
 
                         log.info(String.format("Team %s has %d fouls", team.getName(), team.getFouls()));
@@ -86,7 +87,7 @@ public class FoulResource {
 
                     } else {
                         // 5 Team fouls so only show player fouls
-                        device.setPlayerFoul(totalFouls);
+                        device.setPlayerFoul(playerFouls);
                     }
                     return ResponseEntity.ok().build();
                 })

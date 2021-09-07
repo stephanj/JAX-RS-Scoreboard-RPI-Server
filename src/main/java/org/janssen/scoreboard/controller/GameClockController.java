@@ -106,7 +106,7 @@ public class GameClockController {
                                    final GameType gameType,
                                    final boolean mirrored) {
 
-        log.debug("Start game clock");
+        log.debug(">>>> Start game clock");
 
         this.gameType = gameType;
         this.mirrored = mirrored;
