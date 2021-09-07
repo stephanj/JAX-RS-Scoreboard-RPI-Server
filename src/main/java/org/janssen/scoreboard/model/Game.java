@@ -5,8 +5,6 @@ import org.janssen.scoreboard.model.type.GameType;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import static org.janssen.scoreboard.service.util.Constants.*;
 

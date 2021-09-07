@@ -3,6 +3,7 @@ package org.janssen.scoreboard.service;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.controller.GameClockController;
+import org.janssen.scoreboard.model.DatedModel;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.AgeCategory;
@@ -16,8 +17,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
 import static org.janssen.scoreboard.service.util.Constants.TEN_MINUTES_IN_SECONDS;
@@ -60,7 +63,11 @@ public class GameService {
     }
 
     public List<Game> findAll() {
-        return gameRepository.findAll();
+        return gameRepository
+                .findAll()
+                .stream()
+                .sorted(Comparator.comparing(DatedModel::getCreatedOn).reversed())
+                .collect(Collectors.toList());
     }
 
     public void setGameClock(final Game game) {

@@ -1,7 +1,6 @@
 package org.janssen.scoreboard.controller;
 
 import com.pi4j.io.gpio.*;
-import org.janssen.scoreboard.config.ApplicationProperties;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

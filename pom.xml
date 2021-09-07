@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>org.janssen</groupId>
-	<artifactId>scorboard</artifactId>
+	<artifactId>scoreboard</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>KBBCO Scoreboard</name>
 	<description>Scoreboard project for RPI</description>
