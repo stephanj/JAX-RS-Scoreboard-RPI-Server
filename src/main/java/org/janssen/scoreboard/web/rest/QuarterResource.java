@@ -54,7 +54,7 @@ public class QuarterResource {
     @PutMapping("/inc/{gameId}")
     public ResponseEntity<?> incrementQuarter(@PathVariable("gameId") Long gameId) {
 
-        log.debug("Increment game quarter");
+        log.debug("Increment quarter for game {}", gameId);
 
         if (gameClockController.isRunning()) {
             log.info("Game clock controller is running");

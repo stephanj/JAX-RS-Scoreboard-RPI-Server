@@ -3,6 +3,7 @@ package org.janssen.scoreboard.web.rest;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.model.Team;
 import org.janssen.scoreboard.model.type.TeamType;
+import org.janssen.scoreboard.service.TeamService;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
 import org.janssen.scoreboard.service.repository.TeamRepository;
 import org.slf4j.LoggerFactory;
@@ -22,16 +23,16 @@ public class ScoreResource {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(ScoreResource.class);
 
-    private final TeamRepository teamRepository;
+    private final TeamService teamService;
 
     private final DeviceController device;
 
     private final ProducerService producerService;
 
-    public ScoreResource(TeamRepository teamRepository,
+    public ScoreResource(TeamService teamService,
                          DeviceController device,
                          ProducerService producerService) {
-        this.teamRepository = teamRepository;
+        this.teamService = teamService;
         this.device = device;
         this.producerService = producerService;
     }
@@ -40,13 +41,13 @@ public class ScoreResource {
     public ResponseEntity<String> getScore(
             @PathVariable("teamId") Long teamId) {
 
-        log.debug("Get score for team");
+        log.debug("Get score for team {}", teamId);
 
         if (teamId == null || teamId == 0) {
             return ResponseEntity.badRequest().body("Team id can't be null or zero");
         }
 
-        return teamRepository.findById(teamId)
+        return teamService.findById(teamId)
                 .map(team -> ResponseEntity.ok(team.getScore().toString()))
                 .orElse(ResponseEntity.badRequest().body("Team does not exist"));
     }
@@ -56,14 +57,14 @@ public class ScoreResource {
             @PathVariable("teamId") Long teamId,
             @RequestParam("points") @DefaultValue("2") int points) {
 
-        log.debug("Increment score for team {}", teamId);
+        log.debug("Increment score for team {} with {} points", teamId, points);
 
         if (teamId == null || teamId == 0) {
             log.info("Team id can't be null");
             return ResponseEntity.badRequest().body("Team id can't be null or zero");
         }
 
-        return teamRepository
+        return teamService
                 .findById(teamId)
                 .filter(team -> team.getScore() + points <= 999)
                 .map(team -> {
@@ -79,13 +80,13 @@ public class ScoreResource {
             @PathVariable("teamId") Long teamId,
             @RequestParam("points") @DefaultValue("1") int points) {
 
-        log.debug("Decrement score for team {}", teamId);
+        log.debug("Decrement score for team {} with {}", teamId, points);
 
         if (teamId == null || teamId == 0) {
             return ResponseEntity.badRequest().body("Team id can't be null or zero");
         }
 
-        return teamRepository
+        return teamService
                 .findById(teamId)
                 .filter(team -> team.getScore() - points >= 0)
                 .map(team -> {
@@ -109,7 +110,7 @@ public class ScoreResource {
             }
         }
 
-        teamRepository.save(team);
+        teamService.save(team);
 
         device.setScore(team);
     }
