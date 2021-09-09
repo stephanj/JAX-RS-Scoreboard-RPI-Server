@@ -1,11 +1,14 @@
 package org.janssen.scoreboard.web.rest;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GameClockController;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.service.GameService;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
 import org.janssen.scoreboard.service.util.ResponseUtil;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -48,7 +51,7 @@ public class GameResource {
     }
 
     @PostMapping
-    public ResponseEntity<Game> createGame(@RequestParam("teamA") String teamNameA,
+    public ResponseEntity<?> createGame(@RequestParam("teamA") String teamNameA,
                                         @RequestParam("teamB") String teamNameB,
                                         @RequestParam("type")  int gameType,
                                         @RequestParam("age")   int ageCategory,
@@ -59,7 +62,10 @@ public class GameResource {
 
         Game game = gameService.newGame(teamNameA, teamNameB, gameType, ageCategory, court, mirrored);
 
-        return ResponseEntity.created(new URI("/api/game/" + game.getId())).body(game);
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("game", game);
+
+        return ResponseEntity.created(new URI("/api/game/" + game.getId())).body(jsonResponse);
     }
 
     @PostMapping("/start")
