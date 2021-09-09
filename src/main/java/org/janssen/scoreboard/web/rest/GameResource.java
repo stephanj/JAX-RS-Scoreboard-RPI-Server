@@ -1,7 +1,5 @@
 package org.janssen.scoreboard.web.rest;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GameClockController;
 import org.janssen.scoreboard.model.Game;
