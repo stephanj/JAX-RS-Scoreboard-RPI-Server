@@ -67,7 +67,7 @@ public class GPIOController {
 
     @Async
     public void setLed(final GPIOType ledType, final boolean isOn) {
-        log.debug(">>>> Set LED");
+        log.debug(">>>> Set LED {} to {}", ledType.toString(), isOn);
 
         if (runningOnRPI) {
             switch (ledType) {
