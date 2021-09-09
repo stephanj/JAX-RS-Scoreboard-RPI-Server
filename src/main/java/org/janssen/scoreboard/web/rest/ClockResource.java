@@ -54,8 +54,7 @@ public class ClockResource {
     }
 
     @PutMapping("/start/{gameId}")
-    public ResponseEntity<Object> startClock(
-            @PathVariable("gameId") Long gameId) {
+    public ResponseEntity<Object> startClock(@PathVariable("gameId") Long gameId) {
 
         log.debug("Start clock for game with id {} ", gameId);
 
@@ -132,7 +131,7 @@ public class ClockResource {
         if (gameClockController.isNotRunning()) {
 
             if (gameId == null || gameId == 0) {
-                return ResponseEntity.badRequest().body(String.format("Wedstrijd ID (%d) is verkeerd, start 'New Game'.", gameId));
+                return ResponseEntity.badRequest().body(String.format("Game id (%d) is wrong, start 'New Game'.", gameId));
             }
 
             return gameService

@@ -59,13 +59,15 @@ public class GameResource {
 
         Game game = gameService.newGame(teamNameA, teamNameB, gameType, ageCategory, court, mirrored);
 
-        return ResponseEntity.created(new URI("/api/game/" + game.getId())).build();
+        return ResponseEntity.created(new URI("/api/game/" + game.getId())).body(game);
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Object> startGame(@RequestParam("gameId") Long gameId) {
+    public ResponseEntity<Object> startGame(@RequestParam("token") String token,
+                                            @RequestParam("gameId") Long gameId,
+                                            @RequestParam("mirrored") Boolean mirrored) {
 
-        log.debug(">>>>> Start game for {}", gameId);
+        log.debug(">>>>> Start game with id {}, token {} and mirrored {}", gameId, token, mirrored);
 
         // Clock might be running in countdown mode
         if (gameClockController.isRunning()) {

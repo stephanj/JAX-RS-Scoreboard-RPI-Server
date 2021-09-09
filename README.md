@@ -86,24 +86,10 @@ Compile en package project met maven
 
 # Raspberry Pi info 
 
-## JDK 8 for ARM Downloads
+## JDK 11 for ARM Downloads
 
-http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html
-    
-    sudo tar zxvf jdk-8u6-linux-arm-vfp-hflt.gz -C /opt
-
-Set default java and javac to the new installed jdk8.
-
-    $ sudo update-alternatives --install /usr/bin/javac javac /opt/jdk1.8.0_06/bin/javac 1
-    $ sudo update-alternatives --install /usr/bin/java java /opt/jdk1.8.0_06/bin/java 1
-
-    $ sudo update-alternatives --config javac
-    $ sudo update-alternatives --config java
-
-After all, verify with the commands with -version option.
-
-    $ java -version
-    $ javac -version
+Use the Desktop to Add/Remove programs to the Debian install.  Here you can search on "OpenJDK" and select the 
+Java 11 headless package with JRE. 
 
 ## Creating/Restoring an SD image  
 
@@ -121,3 +107,42 @@ See http://computers.tutsplus.com/articles/how-to-clone-raspberry-pi-sd-cards-us
     sudo dd if=~/Desktop/DevoxxSignageRaspberryPI.dmg of=/dev/disk2 bs=1M
 
 Use Ctrl-T to check dd status
+
+
+# Automatically execute script at Linux startup with Debian 9 (Stretch)
+
+Create a file name /home/pi/startup.sh with the following command
+
+    java -jar /home/pi/JAX-RS-Scoreboard-RPI-Server/target/scoreboard-0.0.1-SNAPSHOT.jar
+
+Now make sure the script is executable
+
+    $ sudo chmod +x /home/pi/startup.sh
+
+Add script to file /etc/rc.local :
+
+    #!/bin/sh -e
+    #
+    # rc.local
+    #
+    # This script is executed at the end of each multiuser runlevel.
+    # Make sure that the script will "exit 0" on success or any other
+    # value on error.
+    #
+    # In order to enable or disable this script just change the execution
+    # bits.
+    #
+    # By default this script does nothing.
+    
+    # added by ADMIN to run fancy stuff at boot:
+    /home/pi/startup.sh || exit 1
+    
+    exit 0
+
+Make sure /etc/rc.local is executable:
+
+    $ sudo chmod +x /etc/rc.local
+
+Test that your script gets executed if rc.local is started:
+    
+    $ sudo service rc.local restart
