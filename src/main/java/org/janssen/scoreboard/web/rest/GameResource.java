@@ -48,7 +48,7 @@ public class GameResource {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGame(@RequestParam("teamA") String teamNameA,
+    public ResponseEntity<Game> createGame(@RequestParam("teamA") String teamNameA,
                                         @RequestParam("teamB") String teamNameB,
                                         @RequestParam("type")  int gameType,
                                         @RequestParam("age")   int ageCategory,
@@ -67,7 +67,7 @@ public class GameResource {
                                             @RequestParam("gameId") Long gameId,
                                             @RequestParam("mirrored") Boolean mirrored) {
 
-        log.debug(">>>>> Start game with id {}, token {} and mirrored {}", gameId, token, mirrored);
+        log.debug(">>>>> Start game with id '{}', token '{}' and mirrored '{}'", gameId, token, mirrored);
 
         // Clock might be running in countdown mode
         if (gameClockController.isRunning()) {
