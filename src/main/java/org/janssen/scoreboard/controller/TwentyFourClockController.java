@@ -68,6 +68,8 @@ public class TwentyFourClockController {
                 // Having the increment here will never show 24 seconds on the clock
                 twentyFourSeconds--;
 
+                log.debug("set 24s clock {}", twentyFourSeconds);
+
                 device.setTwentyFour(twentyFourSeconds);
 
                 if (twentyFourSeconds <= ZERO_SECONDS) {
@@ -134,7 +136,7 @@ public class TwentyFourClockController {
     }
 
     public void setTwentyFourSeconds(final int twentyFourSeconds) {
-        log.debug("Set 24s clock");
+        log.debug("Set 24s clock : {}", twentyFourSeconds);
 
         boolean wasRunning = isRunning();
 
