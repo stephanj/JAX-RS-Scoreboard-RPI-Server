@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Stephan Janssen
  */
 @RestController
-@RequestMapping(value = "/api/broadcast/consumer", consumes = MediaType.TEXT_PLAIN_VALUE)
+@RequestMapping(value = "/api/broadcast/consumer", consumes = MediaType.ALL_VALUE)
 public class ConsumerService extends AbstractBroadcaster {
 
     private final Logger log = LoggerFactory.getLogger(ConsumerService.class);
