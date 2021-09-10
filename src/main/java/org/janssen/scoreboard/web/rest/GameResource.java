@@ -142,8 +142,8 @@ public class GameResource {
     private String getGameClockFormatted(final Game game) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
-        jsonObject.put("s", game.getClock() % 60);          // Clock seconds
-        jsonObject.put("m", game.getClock() / 60);          // Clock minutes
+        jsonObject.put("s", gameClockController.getSeconds() % 60);          // Clock seconds
+        jsonObject.put("m", gameClockController.getSeconds() / 60);          // Clock minutes
         jsonObject.put("A", game.getTeamA().getScore());    // Home team score
         jsonObject.put("B", game.getTeamB().getScore());    // Visiting team score
         jsonObject.put("Q", game.getQuarter());             // Game quarter
