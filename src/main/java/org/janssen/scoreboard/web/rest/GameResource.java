@@ -2,6 +2,7 @@ package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GameClockController;
+import org.janssen.scoreboard.controller.TwentyFourClockController;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.service.GameService;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
@@ -34,17 +35,21 @@ public class GameResource {
 
     private final GameClockController gameClockController;
 
+    private final TwentyFourClockController twentyFourClockController;
+
     private final ProducerService producerService;
 
     private final DeviceController deviceController;
 
     public GameResource(GameService gameService,
                         GameClockController gameClockController,
+                        TwentyFourClockController twentyFourClockController,
                         DeviceController deviceController,
                         ProducerService producerService) {
         this.gameService = gameService;
         this.deviceController = deviceController;
         this.gameClockController = gameClockController;
+        this.twentyFourClockController = twentyFourClockController;
         this.producerService = producerService;
     }
 
@@ -116,6 +121,40 @@ public class GameResource {
         return ResponseEntity.ok().body(gameService.findAll());
     }
 
+    /**
+     * Return the game info as JSON
+     * This is used to show game score, clock and 24 seconds in the OBS streaming layer.
+     *
+     * @param gameId    the game id
+     * @return  return Game JSON info
+     */
+    @GetMapping("info/{gameId}")
+    public ResponseEntity<?> getGameInfoAsJson(@PathVariable("gameId") Long gameId) {
+        log.debug(">>>>> Get game info for {}", gameId);
+        return gameService
+                .findGameById(gameId)
+                .map(game -> ResponseEntity
+                        .ok()
+                        .body(getGameClockFormatted(game)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private String getGameClockFormatted(final Game game) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
+        jsonObject.put("s", game.getClock() % 60);          // Clock seconds
+        jsonObject.put("m", game.getClock() / 60);          // Clock minutes
+        jsonObject.put("A", game.getTeamA().getScore());    // Home team score
+        jsonObject.put("B", game.getTeamB().getScore());    // Visiting team score
+        log.debug("Game info : '{}'", jsonObject);
+        return jsonObject.toJSONString();
+    }
+
+    /**
+     * Show game info as text.
+     * @param gameId the game id
+     * @return game info as text
+     */
     @GetMapping(value = "{gameId}", produces = MediaType.TEXT_PLAIN_VALUE)
     public String showGameAsText(@PathVariable("gameId") Long gameId) {
         if (gameId == null || gameId == 0) {
@@ -124,18 +163,15 @@ public class GameResource {
 
         return gameService
                 .findGameById(gameId)
-                .map(game ->  {
-                    String gameClock = String.format(", Game time:%02d:%02d", game.getClock()/60, game.getClock()%60);
-                    return game +
-                            ", Quarter:" + game.getQuarter() +
-                            ", Team A Fouls:" + game.getTeamA().getFouls() +
-                            ", Team B Fouls:" + game.getTeamB().getFouls() +
-                            ", Category:" + game.getAgeCategory().getName() +
-                            gameClock +
-                            ", Type:" + game.getGameType() +
-                            ", Court:" + game.getCourt() +
-                            ", CreatedBy:" + game.getUserName();
-                })
+                .map(game -> game +
+                        ", Quarter:" + game.getQuarter() +
+                        ", Team A Fouls:" + game.getTeamA().getFouls() +
+                        ", Team B Fouls:" + game.getTeamB().getFouls() +
+                        ", Category:" + game.getAgeCategory().getName() +
+                        ", Game clock:" + getGameClockFormatted(game) +
+                        ", Type:" + game.getGameType() +
+                        ", Court:" + game.getCourt() +
+                        ", CreatedBy:" + game.getUserName())
                 .orElse("Game not found");
     }
 

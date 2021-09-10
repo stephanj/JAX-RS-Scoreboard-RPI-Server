@@ -85,6 +85,8 @@ See http://computers.tutsplus.com/articles/how-to-clone-raspberry-pi-sd-cards-us
     diskutil list
     sudo dd if=/dev/disk2 of=~/Desktop/raspberrypi.dmg
 
+Use Ctrl-T to check dd status
+
 ### Restore image
 
     diskutil unmountDisk /dev/disk2

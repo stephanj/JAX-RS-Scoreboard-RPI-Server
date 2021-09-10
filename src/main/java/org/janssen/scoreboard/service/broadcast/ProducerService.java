@@ -1,18 +1,17 @@
 package org.janssen.scoreboard.service.broadcast;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import java.time.Duration;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 /**
  * Produce a broadcast message for the mirrored scoreboard.
@@ -29,17 +28,10 @@ public class ProducerService extends AbstractBroadcaster {
 //    private static final String BASE_URL = "http://10.0.1.82:8080/api/broadcast/consumer";
 
     // We can take scoreboard A as the FIXED mirrored target server.
-    private HttpClient httpclient;
-
-    @PostConstruct
-    public void init() {
-        httpclient = new DefaultHttpClient();
-    }
-
-    @PreDestroy
-    public void cleanup () {
-        httpclient.getConnectionManager().shutdown();
-    }
+    private static final HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)
+            .connectTimeout(Duration.ofSeconds(1))
+            .build();
 
     public void printFoulsA(final Integer foul) {
         postData(FOULS_A, foul);
@@ -80,12 +72,17 @@ public class ProducerService extends AbstractBroadcaster {
     @Async
     public void postData(final String path, final Integer value) {
         log.debug("Post data to {} with value {}", path, value);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(value.toString()))
+                .uri(URI.create(BASE_URL + path))
+                .header("Content-Type", "text/plain; charset=UTF-8")
+                .build();
+
         try {
-            HttpPost httpPost = new HttpPost(BASE_URL + path);
-            httpPost.setEntity(new StringEntity(value.toString()));
-            httpclient.execute(httpPost);
-        } catch (IOException e) {
-            // Ignore because it's a fire and forget REST call
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            log.debug("HTTP POST status {}", response.statusCode());
+        } catch (IOException | InterruptedException e) {
             log.error(e.getMessage());
         }
     }
