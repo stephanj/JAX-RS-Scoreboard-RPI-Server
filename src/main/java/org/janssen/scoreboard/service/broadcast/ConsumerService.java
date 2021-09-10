@@ -5,7 +5,6 @@ import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Stephan Janssen
  */
 @RestController
-@RequestMapping(value = "/api/broadcast/consumer", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/broadcast/consumer")
 public class ConsumerService extends AbstractBroadcaster {
 
     private final Logger log = LoggerFactory.getLogger(ConsumerService.class);

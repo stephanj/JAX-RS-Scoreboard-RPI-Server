@@ -23,13 +23,13 @@ import java.io.IOException;
 @Scope("singleton")
 public class ProducerService extends AbstractBroadcaster {
 
-    private final org.slf4j.Logger log = LoggerFactory.getLogger(ProducerService.class);
+    private final Logger log = LoggerFactory.getLogger(ProducerService.class);
 
     private static final String BASE_URL = "http://192.168.1.100:8080/api/broadcast/consumer";
 //    private static final String BASE_URL = "http://10.0.1.82:8080/api/broadcast/consumer";
 
     // We can take scoreboard A as the FIXED mirrored target server.
-    HttpClient httpclient;
+    private HttpClient httpclient;
 
     @PostConstruct
     public void init() {
@@ -41,35 +41,35 @@ public class ProducerService extends AbstractBroadcaster {
         httpclient.getConnectionManager().shutdown();
     }
 
-    public void printFoulsA(final int foul) {
+    public void printFoulsA(final Integer foul) {
         postData(FOULS_A, foul);
     }
 
-    public void printFoulsB(final int foul) {
+    public void printFoulsB(final Integer foul) {
         postData(FOULS_B, foul);
     }
 
-    public void setPlayerFoul(final int totalPersonaFoul) {
+    public void setPlayerFoul(final Integer totalPersonaFoul) {
         postData(PERSONAL_FOUL, totalPersonaFoul);
     }
 
-    public void printHomeScore(final int score) {
+    public void printHomeScore(final Integer score) {
         postData(HOME, score);
     }
 
-    public void printVisitorsScore(final int score) {
+    public void printVisitorsScore(final Integer score) {
         postData(VISITORS, score);
     }
 
-    public void printTimeInSeconds(final int seconds) {
+    public void printTimeInSeconds(final Integer seconds) {
         postData(TIME, seconds);
     }
 
-    public void printHomeTimeout(final int timeout) {
+    public void printHomeTimeout(final Integer timeout) {
         postData(TIMEOUT_HOME, timeout);
     }
 
-    public void printVisitorsTimeout(final int timeout) {
+    public void printVisitorsTimeout(final Integer timeout) {
         postData(TIMEOUT_VISITORS, timeout);
     }
 
@@ -78,10 +78,11 @@ public class ProducerService extends AbstractBroadcaster {
     }
 
     @Async
-    public void postData(final String path, final int foul) {
+    public void postData(final String path, final Integer value) {
+        log.debug("Post data to {} with value {}", path, value);
         try {
             HttpPost httppost = new HttpPost(BASE_URL + path);
-            httppost.setEntity(new StringEntity("" + foul));
+            httppost.setEntity(new StringEntity(value.toString()));
             httpclient.execute(httppost);
         } catch (IOException e) {
             // Ignore because it's a fire and forget REST call
