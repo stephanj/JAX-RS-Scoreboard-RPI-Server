@@ -81,9 +81,9 @@ public class ProducerService extends AbstractBroadcaster {
     public void postData(final String path, final Integer value) {
         log.debug("Post data to {} with value {}", path, value);
         try {
-            HttpPost httppost = new HttpPost(BASE_URL + path);
-            httppost.setEntity(new StringEntity(value.toString()));
-            httpclient.execute(httppost);
+            HttpPost httpPost = new HttpPost(BASE_URL + path);
+            httpPost.setEntity(new StringEntity(value.toString()));
+            httpclient.execute(httpPost);
         } catch (IOException e) {
             // Ignore because it's a fire and forget REST call
             log.error(e.getMessage());
