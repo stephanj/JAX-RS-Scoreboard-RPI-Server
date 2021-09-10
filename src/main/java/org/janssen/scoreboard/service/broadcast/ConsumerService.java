@@ -5,7 +5,6 @@ import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.model.type.GPIOType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,13 +29,13 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Stephan Janssen
  */
 @RestController
-@RequestMapping(value = "/api/broadcast/consumer", consumes = MediaType.ALL_VALUE)
+@RequestMapping(value = "/api/broadcast/consumer")
 public class ConsumerService extends AbstractBroadcaster {
 
     private final Logger log = LoggerFactory.getLogger(ConsumerService.class);
 
-    private static final int NO_TIMEOUTS = 0;
-    private static final int ONE_TIMEOUT = 1;
+    private static final Integer NO_TIMEOUTS = 0;
+    private static final Integer ONE_TIMEOUT = 1;
 
     private final DeviceController device;
 
@@ -47,68 +46,69 @@ public class ConsumerService extends AbstractBroadcaster {
         this.GPIOController = GPIOController;
     }
 
-    @PostMapping(NEW_GAME)
+    @PostMapping(value = NEW_GAME)
     public void newMirroredBasketGame() {
-        log.debug("Start new mirrored basketball game");
+        log.debug(">>> Start new mirrored basketball game");
 
         // Reset Home team
         device.setScoreHome(0);
         device.setFoulsHome(0);
-        printTimeoutHome(NO_TIMEOUTS);
+        printTimeoutHome(NO_TIMEOUTS.toString());
 
         // Reset visiting team
         device.setScoreVisitors(0);
         device.setFoulsVisitors(0);
-        printTimeoutVisitors(NO_TIMEOUTS);
+        printTimeoutVisitors(NO_TIMEOUTS.toString());
 
         device.setClockOnly(600);
     }
 
     @PostMapping(FOULS_A)
-    public void printFoulsHome(@RequestBody final Integer fouls) {
-        log.debug("Print fouls home team : {}", fouls);
-        device.setFoulsHome(fouls);
+    public void printFoulsHome(@RequestBody String fouls) {
+        log.debug(">>> Print fouls home team : {}", fouls);
+        device.setFoulsHome(Integer.parseInt(fouls));
     }
 
     @PostMapping(FOULS_B)
-    public void printFoulsVisitors(@RequestBody final Integer fouls) {
-        log.debug("Print fouls visitor team : {}", fouls);
-        device.setFoulsVisitors(fouls);
+    public void printFoulsVisitors(@RequestBody String fouls) {
+        log.debug(">>> Print fouls visitor team : {}", fouls);
+        device.setFoulsVisitors(Integer.parseInt(fouls));
     }
 
     @PostMapping(PERSONAL_FOUL)
-    public void printPersonalFouls(@RequestBody final Integer totalPersonalFouls) {
-        log.debug("Print personal fouls : {}", totalPersonalFouls);
-        device.setPlayerFoul(totalPersonalFouls);
+    public void printPersonalFouls(@RequestBody String totalPersonalFouls) {
+        log.debug(">>> Print personal fouls : {}", totalPersonalFouls);
+        device.setPlayerFoul(Integer.parseInt(totalPersonalFouls));
     }
 
     @PostMapping(QUARTER)
-    public void printQuarter(@RequestBody final Integer quarter) {
-        log.debug("Print quarter : {}", quarter);
-        device.setPlayerFoul(quarter);
+    public void printQuarter(@RequestBody String quarter) {
+        log.debug(">>> Print quarter : {}", quarter);
+        device.setPlayerFoul(Integer.parseInt(quarter));
     }
 
-    @PostMapping(HOME)
-    public void printScoreHome(@RequestBody final Integer score) {
-        log.debug("Print home score : {}", score);
-        device.setScoreHome(score);
+    @PostMapping(value = HOME)
+    public void printScoreHome(@RequestBody String score) {
+        log.debug(">>> Print home score : {}", score);
+        device.setScoreHome(Integer.parseInt(score));
     }
 
     @PostMapping(VISITORS)
-    public void printScoreVisitors(@RequestBody final Integer score) {
-        log.debug("Print visitors score : {}", score);
-        device.setScoreVisitors(score);
+    public void printScoreVisitors(@RequestBody String score) {
+        log.debug(">>> Print visitors score : {}", score);
+        device.setScoreVisitors(Integer.parseInt(score));
     }
 
     @PostMapping(TIME)
-    public void printTime(@RequestBody final Integer seconds) {
-        log.debug("Print time in seconds : {}", seconds);
-        device.setClockOnly(seconds);
+    public void printTime(@RequestBody String seconds) {
+        log.debug(">>> Print time in seconds : {}", seconds);
+        device.setClockOnly(Integer.parseInt(seconds));
     }
 
     @PostMapping(TIMEOUT_HOME)
-    public void printTimeoutHome(@RequestBody final Integer timeout) {
-        log.debug("Print home timeout : {}", timeout);
+    public void printTimeoutHome(@RequestBody String strTimeout) {
+        log.debug(">>> Print home timeout : {}", strTimeout);
+        int timeout = Integer.parseInt(strTimeout);
         if (timeout == NO_TIMEOUTS) {
             GPIOController.setLed(GPIOType.TIME_OUT_H1, false);
             GPIOController.setLed(GPIOType.TIME_OUT_H2, false);
@@ -120,8 +120,9 @@ public class ConsumerService extends AbstractBroadcaster {
     }
 
     @PostMapping(TIMEOUT_VISITORS)
-    public void printTimeoutVisitors(@RequestBody final Integer timeout) {
-        log.debug("Print visitors timeout : {}", timeout);
+    public void printTimeoutVisitors(@RequestBody String strTimeout) {
+        log.debug(">>> Print visitors timeout : {}", strTimeout);
+        int timeout = Integer.parseInt(strTimeout);
         // Set visitors timeout LEDs
         if (timeout == NO_TIMEOUTS) {
             GPIOController.setLed(GPIOType.TIME_OUT_V1, false);
