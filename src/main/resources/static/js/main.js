@@ -1,27 +1,23 @@
 
-var isTimeoutRunning = false;
+let isTimeoutRunning = false;
 
-var resultObject = {
+let resultObject = {
     formSubmitionResult: null
 }
-
 
 $(document).on('pagebeforeshow', '#login', function () {
     $.mobile.defaultPageTransition = "slide";
 
     $(document).on('click', '#submit', function () { // catch the form's submit event
-        var username = $('#username').val().toLowerCase();
-        var password = $('#password').val();
+        const username = $('#username').val().toLowerCase();
+        const password = $('#password').val();
 
         if (username.length > 0 && password.length > 0) {
 
-            var data = "{ login: { username: '" + username + "', password: '" + password + "' }}";
-
             jQuery.support.cors = true;
 
-            $.ajax( {   url: '/api/auth/payload',
-                        type: 'post',
-                        data: data,
+            $.ajax( {   url: '/api/auth/login?username=' + username + "&password=" + password,
+                        type: 'POST',
                         async: true,
                         contentType: 'application/json; charset=UTF-8',
                         dataType: 'text',
@@ -38,7 +34,7 @@ $(document).on('pagebeforeshow', '#login', function () {
                             resultObject.formSubmitionResult = result;
                             $.mobile.changePage("#24s");
                         },
-                        error: function (request, error) {
+                        error: function () {
                             alert('Probleem met login');
                         }
                     });

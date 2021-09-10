@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +19,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 /**
- * TODO This post should happen over HTTPS but we don't have an SSL certificate to do this :(
+ * Very basic authentication service.
  *
  * @author Stephan Janssen
  */
@@ -40,15 +37,12 @@ public class AuthenticateService {
         this.tokenRepository = tokenRepository;
     }
 
-    @PostMapping("/payload")
-    public ResponseEntity<?> loginByPayload(Login login) {
-        return verifyLogin(login.getUsername(), login.getPassword());
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> verifyLogin(
             @RequestParam("username") String username,
             @RequestParam("password") String password) {
+
+        log.debug(">>> verify login : {}:{}", username, password);
 
         if (username == null || username.length() == 0) {
             log.info("Username not defined:"+username);
@@ -91,47 +85,26 @@ public class AuthenticateService {
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Authorisation failed");
     }
 
-    @PostMapping("/password")
-    public ResponseEntity<?> passwordForgotten(
-            @RequestParam("username") String username) {
-
-        if (username == null || username.length() == 0) {
-            return ResponseEntity.badRequest().body("Username not defined");
-        }
-
-        try {
-            final String user = findUser(username);
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("User does not exist");
-            }
-
-            final User foundUser = new User(username, user);
-
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Authorisation failed");
-    }
-
     /**
      * Find user in property file.
      *
-     * @param username
-     * @return
+     * @param username the username
+     * @return the related user
      * @throws IOException
      */
     private String findUser(final String username) throws IOException {
+        log.debug("findUser {}", username);
+
         Properties prop = new Properties();
 
         final InputStream resourceAsStream =
                 getClass().getClassLoader().getResourceAsStream(CONFIG_PROPERTIES);
 
-            if (resourceAsStream != null) {
-                prop.load(resourceAsStream);
-                return prop.getProperty(username);
-            } else {
-                return null;
-            }
+        if (resourceAsStream != null) {
+            prop.load(resourceAsStream);
+            return prop.getProperty(username);
+        } else {
+            return null;
+        }
     }
 }
