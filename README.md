@@ -2,35 +2,20 @@
 
 ## Compile project
 
-Server Scoreboard code moet blijkbaar met JDK 1.7 gecompiled worden om op de versie van TomEE te draaien.
+The updated scoreboard project now uses Java 11 and Spring Boot. 
 
-MAAR indien je de 24s MainApp wilt compilen moet dit met JDK 1.8 gebeuren.
-
-Dus de pom.xml moet je telkens aanpassen obv de nodige target JDK indien je MainApp of the server wenst te compilen.
-
-Zie pom.xml
-
-    <configuration>
-        <source>1.7</source>
-        <target>1.7</target>
-    </configuration>
-
-Compile en package project met maven
+Compile and package project using maven with following command :
 
     mvn clean package
 
-### Run
+### Run Spring Boot app
 
-    mvn tomee:run
+    mvn spring-boot:run 
 
 ### 24 Seconds web client
 
     http://localhost:8080/
 
-### Maven dependencies
-
-        <openejb.version>4.7.2</openejb.version>
-        <tomee.version>1.7.2</tomee.version>
 
 ### REST METHODS
 
@@ -146,3 +131,20 @@ Make sure /etc/rc.local is executable:
 Test that your script gets executed if rc.local is started:
     
     $ sudo service rc.local restart
+
+# RPI Network Config 
+
+The RPI is connected with an ethernet cable to the local network.  
+Wifi is not used by the RPI so doesn't need to be configured.
+
+Edit /etc/dhcpcd.conf and add the following entry:
+
+    interface eth0
+    static ip_address=192.168.1.100
+    static routers=192.168.11.1
+    static domain_name_servers=8.8.8.8
+
+Only the static ip_address is import and is defined based on the basketball court.
+Court A = 192.168.1.100
+Court B = 192.168.1.101
+Court C = 192.168.1.102

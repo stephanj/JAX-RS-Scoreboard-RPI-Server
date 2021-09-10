@@ -3,8 +3,11 @@ package org.janssen.scoreboard.service.broadcast;
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GPIOController;
 import org.janssen.scoreboard.model.type.GPIOType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/api/broadcast/consumer", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ConsumerService extends AbstractBroadcaster {
 
+    private final Logger log = LoggerFactory.getLogger(ConsumerService.class);
+
     private static final int NO_TIMEOUTS = 0;
     private static final int ONE_TIMEOUT = 1;
 
@@ -44,6 +49,8 @@ public class ConsumerService extends AbstractBroadcaster {
 
     @PostMapping(NEW_GAME)
     public void newMirroredBasketGame() {
+        log.debug("Start new mirrored basketball game");
+
         // Reset Home team
         device.setScoreHome(0);
         device.setFoulsHome(0);
@@ -58,43 +65,50 @@ public class ConsumerService extends AbstractBroadcaster {
     }
 
     @PostMapping(FOULS_A)
-    public void printFoulsHome(final int fouls) {
+    public void printFoulsHome(@RequestBody final Integer fouls) {
+        log.debug("Print fouls home team : {}", fouls);
         device.setFoulsHome(fouls);
     }
 
     @PostMapping(FOULS_B)
-    public void printFoulsVisitors(final int fouls) {
+    public void printFoulsVisitors(@RequestBody final Integer fouls) {
+        log.debug("Print fouls visitor team : {}", fouls);
         device.setFoulsVisitors(fouls);
     }
 
     @PostMapping(PERSONAL_FOUL)
-    public void printPersonalFouls(final int totalPersonalFouls) {
+    public void printPersonalFouls(@RequestBody final Integer totalPersonalFouls) {
+        log.debug("Print personal fouls : {}", totalPersonalFouls);
         device.setPlayerFoul(totalPersonalFouls);
     }
 
     @PostMapping(QUARTER)
-    public void printQuarter(final int quarter) {
+    public void printQuarter(@RequestBody final Integer quarter) {
+        log.debug("Print quarter : {}", quarter);
         device.setPlayerFoul(quarter);
     }
 
     @PostMapping(HOME)
-    public void printScoreHome(final int score) {
+    public void printScoreHome(@RequestBody final Integer score) {
+        log.debug("Print home score : {}", score);
         device.setScoreHome(score);
     }
 
     @PostMapping(VISITORS)
-    public void printScoreVisitors(final int score) {
+    public void printScoreVisitors(@RequestBody final Integer score) {
+        log.debug("Print visitors score : {}", score);
         device.setScoreVisitors(score);
     }
 
     @PostMapping(TIME)
-    public void printTime(final int seconds) {
+    public void printTime(@RequestBody final Integer seconds) {
+        log.debug("Print time in seconds : {}", seconds);
         device.setClockOnly(seconds);
     }
 
     @PostMapping(TIMEOUT_HOME)
-    public void printTimeoutHome(final int timeout) {
-
+    public void printTimeoutHome(@RequestBody final Integer timeout) {
+        log.debug("Print home timeout : {}", timeout);
         if (timeout == NO_TIMEOUTS) {
             GPIOController.setLed(GPIOType.TIME_OUT_H1, false);
             GPIOController.setLed(GPIOType.TIME_OUT_H2, false);
@@ -106,8 +120,8 @@ public class ConsumerService extends AbstractBroadcaster {
     }
 
     @PostMapping(TIMEOUT_VISITORS)
-    public void printTimeoutVisitors(final int timeout) {
-
+    public void printTimeoutVisitors(@RequestBody final Integer timeout) {
+        log.debug("Print visitors timeout : {}", timeout);
         // Set visitors timeout LEDs
         if (timeout == NO_TIMEOUTS) {
             GPIOController.setLed(GPIOType.TIME_OUT_V1, false);
