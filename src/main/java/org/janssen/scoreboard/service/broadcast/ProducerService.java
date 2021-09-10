@@ -2,10 +2,12 @@ package org.janssen.scoreboard.service.broadcast;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.io.IOException;
 import java.net.URI;
@@ -24,15 +26,19 @@ public class ProducerService extends AbstractBroadcaster {
 
     private final Logger log = LoggerFactory.getLogger(ProducerService.class);
 
-    private static final String BASE_URL = "http://192.168.1.100:8080/api/broadcast/consumer";
-
-//    private static final String BASE_URL = "http://10.0.1.101:8080/api/broadcast/consumer";
+    @Value("${consumer.destination}")
+    private String CONSUMER_DESTINATION;
 
     // We can take scoreboard A as the FIXED mirrored target server.
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .connectTimeout(Duration.ofSeconds(1))
             .build();
+
+    @PostConstruct
+    public void init() {
+        log.info(">>>> Consumer destination URL : {}", CONSUMER_DESTINATION);
+    }
 
     public void printFoulsA(final Integer foul) {
         postData(FOULS_A, foul);
@@ -76,7 +82,7 @@ public class ProducerService extends AbstractBroadcaster {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(value.toString()))
-                .uri(URI.create(BASE_URL + path))
+                .uri(URI.create(CONSUMER_DESTINATION + path))
                 .header("Content-Type", "text/plain; charset=UTF-8")
                 .build();
 

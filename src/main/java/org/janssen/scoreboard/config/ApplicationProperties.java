@@ -14,6 +14,8 @@ public class ApplicationProperties {
 
     private boolean runningOnPI;
 
+    private String consumerDestination;
+
     public boolean isRunningOnPI() {
         return runningOnPI;
     }
@@ -21,5 +23,13 @@ public class ApplicationProperties {
     public void setRunningOnPI(boolean runningOnPI) {
         log.debug(">>> Running on RPI?  {}", runningOnPI);
         this.runningOnPI = runningOnPI;
+    }
+
+    public String getConsumerDestination() {
+        return consumerDestination;
+    }
+
+    public void setConsumerDestination(String consumerDestination) {
+        this.consumerDestination = consumerDestination;
     }
 }

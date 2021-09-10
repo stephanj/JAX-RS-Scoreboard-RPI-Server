@@ -146,6 +146,7 @@ public class GameResource {
         jsonObject.put("m", game.getClock() / 60);          // Clock minutes
         jsonObject.put("A", game.getTeamA().getScore());    // Home team score
         jsonObject.put("B", game.getTeamB().getScore());    // Visiting team score
+        jsonObject.put("Q", game.getQuarter());             // Game quarter
         log.debug("Game info : '{}'", jsonObject);
         return jsonObject.toJSONString();
     }
