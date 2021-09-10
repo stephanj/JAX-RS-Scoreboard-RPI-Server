@@ -78,20 +78,20 @@ Java 11 headless package with JRE.
 
 ## Creating/Restoring an SD image  
 
-See http://computers.tutsplus.com/articles/how-to-clone-raspberry-pi-sd-cards-using-the-command-line-in-os-x--mac-59911
+See also http://computers.tutsplus.com/articles/how-to-clone-raspberry-pi-sd-cards-using-the-command-line-in-os-x--mac-59911
 
-### Create clone
+### Create image (clone)
 
     diskutil list
-    sudo dd if=/dev/disk2 of=~/Desktop/raspberrypi.dmg
+    sudo dd if=/dev/disk4 of=~/Desktop/RPI4-KBBCO.dmg
 
 Use Ctrl-T to check dd status
 
 ### Restore image
 
-    diskutil unmountDisk /dev/disk2
-    sudo newfs_msdos -F 16 /dev/disk2
-    sudo dd if=~/Desktop/DevoxxSignageRaspberryPI.dmg of=/dev/disk2 bs=1M
+    diskutil unmountDisk /dev/disk4
+    sudo newfs_msdos -F 16 /dev/disk4
+    sudo dd if=~/Desktop/RPI4-KBBCO.dmg of=/dev/disk4
 
 Use Ctrl-T to check dd status
 

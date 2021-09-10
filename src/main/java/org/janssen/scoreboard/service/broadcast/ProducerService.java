@@ -25,7 +25,8 @@ public class ProducerService extends AbstractBroadcaster {
     private final Logger log = LoggerFactory.getLogger(ProducerService.class);
 
     private static final String BASE_URL = "http://192.168.1.100:8080/api/broadcast/consumer";
-//    private static final String BASE_URL = "http://10.0.1.82:8080/api/broadcast/consumer";
+
+//    private static final String BASE_URL = "http://10.0.1.101:8080/api/broadcast/consumer";
 
     // We can take scoreboard A as the FIXED mirrored target server.
     private static final HttpClient httpClient = HttpClient.newBuilder()
