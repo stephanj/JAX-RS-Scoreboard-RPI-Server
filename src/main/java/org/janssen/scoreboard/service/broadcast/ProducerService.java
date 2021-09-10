@@ -14,7 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 /**
- * Produce a broadcast message for the mirrored scoreboard.
+ * Produce a broadcast message from Court B (192.168.1.101) to the mirrored scoreboard on Court A (192.168.1.100).
  *
  * @author Stephan Janssen
  */
