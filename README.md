@@ -51,6 +51,14 @@ Get source code from github
     mvn clean compile package 
 
     cp target/scoreboard.1.0.0.jar /home/pi/.
+    
+    cd /home/pi
+    
+    java -jar scoreboard-1.0.0.jar > /home/pi/output.log
+    
+### Run as service
+
+TODO explain
 
 ### REST METHODS
 
