@@ -191,6 +191,14 @@ Court C = 192.168.1.102
 
 See also https://www.endtoend.ai/tutorial/ngrok-ssh-forwarding/ 
 
+## Install ngrok
+
+To use ngrok, you should install it to the Linux machine you want to expose. 
+
+    wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm.zip 
+
+Simply unzip it, and you have installed ngrok!
+
 ## Authenticate ngrok
 
 To use ngrok, you must be first authenticate it using the ngrok executable file from the unzipped folder.
