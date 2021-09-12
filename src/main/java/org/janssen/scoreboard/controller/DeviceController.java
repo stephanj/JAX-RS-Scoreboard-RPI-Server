@@ -78,6 +78,7 @@ public class DeviceController {
         execute(String.format("%s -v%03d", cmd_score, score));
     }
 
+    @Async
     public void setPlayerFoul(final int foul) {
         execute(String.format("%s -q%d", cmd_score, foul));
 
