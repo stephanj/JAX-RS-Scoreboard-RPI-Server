@@ -80,6 +80,7 @@ public class DeviceController {
 
     @Async
     public void setPlayerFoul(final int foul) {
+        log.debug(">>> Set player foul {}", foul);
         execute(String.format("%s -q%d", cmd_score, foul));
 
         try {
@@ -88,6 +89,7 @@ public class DeviceController {
             e.printStackTrace();
         }
 
+        log.debug(">>> Reset player foul {}", foul);
         execute(String.format("%s -q%d", cmd_score, 0));
     }
 
