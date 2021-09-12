@@ -63,6 +63,8 @@ public class DeviceController {
     }
 
     public void setScore(final Team team) {
+        log.debug("set score team {}", team);
+
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setScoreHome(team.getScore());
         } else {
@@ -71,16 +73,19 @@ public class DeviceController {
     }
 
     public void setScoreHome(final int score) {
+        log.debug("set score home {}", score);
         execute(String.format("%s -h%03d", cmd_score, score));
     }
 
     public void setScoreVisitors(final int score) {
+        log.debug("set score visitors {}", score);
         execute(String.format("%s -v%03d", cmd_score, score));
     }
 
     @Async
     public void setPlayerFoul(final int foul) {
         log.debug(">>> Set player foul {}", foul);
+
         execute(String.format("%s -q%d", cmd_score, foul));
 
         try {
@@ -142,11 +147,11 @@ public class DeviceController {
         twentyFourClockController.setTwentyFourSeconds(TWENTY_FOUR_SECONDS);
         gameClockController.setSeconds(game.getClock());
 
-        setScore(game.getTeamA());
-        setScore(game.getTeamB());
-        setFoul(game.getTeamA());
-        setFoul(game.getTeamB());
-        setPlayerFoul(game.getQuarter());
+        setScoreHome(0);
+        setScoreVisitors(0);
+        setFoulsHome(0);
+        setFoulsVisitors(0);
+
         setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
     }
 
