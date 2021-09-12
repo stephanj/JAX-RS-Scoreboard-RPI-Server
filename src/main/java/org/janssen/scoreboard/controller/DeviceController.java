@@ -101,6 +101,7 @@ public class DeviceController {
         }
     }
 
+    @Async
     public void setFoulsHome(final int fouls) {
         execute(String.format("%s -a%d", cmd_score, fouls));
     }
@@ -109,6 +110,7 @@ public class DeviceController {
         execute(String.format("%s -z", cmd_score));
     }
 
+    @Async
     public void setFoulsVisitors(final int fouls) {
         execute(String.format("%s -b%d", cmd_score, fouls));
     }
