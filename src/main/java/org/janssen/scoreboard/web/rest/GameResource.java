@@ -140,15 +140,26 @@ public class GameResource {
     }
 
     private String getGameClockFormatted(final Game game) {
+
+
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
-        jsonObject.put("s", gameClockController.getSeconds() % 60);          // Clock seconds
-        jsonObject.put("m", gameClockController.getSeconds() / 60);          // Clock minutes
-        jsonObject.put("A", game.getTeamA().getScore());    // Home team score
-        jsonObject.put("B", game.getTeamB().getScore());    // Visiting team score
-        jsonObject.put("Q", game.getQuarter());             // Game quarter
+        jsonObject.put("s", gameClockController.getSeconds() % 60);             // Clock seconds
+        jsonObject.put("m", gameClockController.getSeconds() / 60);             // Clock minutes
+        jsonObject.put("A", game.getTeamA().getScore());                        // Home team score
+        jsonObject.put("B", game.getTeamB().getScore());                        // Visiting team score
+        jsonObject.put("Q", getQuarterString(game.getQuarter()));               // Game quarter
         log.debug("Game info : '{}'", jsonObject);
         return jsonObject.toJSONString();
+    }
+
+    private String getQuarterString(Integer quarter) {
+        switch (quarter) {
+            case 1: return "1st";
+            case 2: return "2nd";
+            case 3: return "3rd";
+            default:  return "4th";
+        }
     }
 
     /**
