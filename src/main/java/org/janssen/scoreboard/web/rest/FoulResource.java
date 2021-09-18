@@ -59,7 +59,7 @@ public class FoulResource {
             return ResponseEntity.badRequest().body("Game id can't be null or zero");
         }
 
-        gameService.resetFouls(gameId);
+        gameService.resetGameFouls(gameId);
         return ResponseEntity.ok().build();
     }
 

@@ -141,8 +141,8 @@ public class DeviceController {
         execute(String.format("%s -f%s", cmd_score, value));
     }
 
-    public void setGame(final Game game) {
-        log.debug(">>> Set game {}", game);
+    public void resetGame(final Game game) {
+        log.debug(">>> Reset game {}", game);
 
         twentyFourClockController.setTwentyFourSeconds(TWENTY_FOUR_SECONDS);
         gameClockController.setSeconds(game.getClock());

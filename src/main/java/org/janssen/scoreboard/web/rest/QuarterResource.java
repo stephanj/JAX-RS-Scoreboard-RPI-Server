@@ -107,7 +107,7 @@ public class QuarterResource {
 
                     gameService.resetTeamFouls(game);
 
-                    gameService.resetTimeoutLeds(game);
+                    gameService.resetTimeoutLEDs(game);
 
                     gameService.update(game);
 

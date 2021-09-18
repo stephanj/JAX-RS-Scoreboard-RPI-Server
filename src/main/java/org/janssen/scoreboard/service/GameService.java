@@ -42,8 +42,6 @@ public class GameService {
 
     private final ProducerService producerService;
 
-    // private Game currentGame = null;
-
     public GameService(GameRepository gameRepository,
                        GameClockController gameClockController,
                        TeamService teamService,
@@ -103,7 +101,7 @@ public class GameService {
 
         if ((game.getGameType() == GameType.BASKET && game.getQuarter() == 3) ||
             (game.getGameType() == GameType.BASKET_KIDS && game.getQuarter() == 5)) {
-            resetTimeoutLeds(game);
+            resetTimeoutLEDs(game);
         }
 
         // Show the 24s LEDs
@@ -112,7 +110,8 @@ public class GameService {
         gameRepository.save(game);
     }
 
-    public void resetTimeoutLeds(final Game game) {
+    @Transactional
+    public void resetTimeoutLEDs(final Game game) {
 
         log.info("game.isMirrored? " + game.isMirrored());
 
@@ -139,7 +138,10 @@ public class GameService {
         gpioController.setLed(GPIOType.TIME_OUT_V2, false);
     }
 
+    @Transactional
     public void resetTeamFouls(final Game game) {
+        log.debug("Reset team fouls for game with id {}", game.getId());
+
         if (game.getGameType() == GameType.BASKET ||
             (game.getGameType() == GameType.BASKET_KIDS &&  game.getQuarter() % 2 == 0)) {   // every 2 quarters
 
@@ -150,6 +152,14 @@ public class GameService {
             final Team teamB = game.getTeamB();
             teamB.setFouls(0);
             teamService.save(teamB);
+
+            // Reset the foul LEDs
+            if (game.isMirrored()) {
+                producerService.printFoulsA(0);
+                producerService.printFoulsB(0);
+            }
+            device.setFoulsHome(0);
+            device.setFoulsVisitors(0);
         }
     }
 
@@ -160,29 +170,23 @@ public class GameService {
      */
     @Transactional
     public void delete(Game game) {
+        log.debug("Delete game with id {}", game.getId());
+
         gameRepository.delete(game);
         device.clearBoard();
     }
 
     @Transactional
-    public void resetFouls(Long gameId) {
+    public void resetGameFouls(Long gameId) {
+        log.debug("reset game fouls for game id {}", gameId);
 
         gameRepository
             .findById(gameId)
-            .ifPresent(game -> {
-                final Team teamA = game.getTeamA();
-                teamA.setFouls(0);
-                update(teamA);
-
-                final Team teamB = game.getTeamB();
-                teamB.setFouls(0);
-                update(teamB);
-            });
+            .ifPresent(this::resetTeamFouls);
     }
 
     @Transactional
     public void update(final Team team) {
-
         log.debug("team.isMirrored? " + team.isMirrored());
 
         if (team.isMirrored()) {
@@ -243,7 +247,7 @@ public class GameService {
             producerService.newGame();
         }
 
-        device.setGame(game);
+        device.resetGame(game);
 
         // Reset the timeout LEDs
         gpioController.setLed(GPIOType.TIME_OUT_V1, false);
@@ -285,8 +289,6 @@ public class GameService {
 
     @Transactional
     public void update(final Game game) {
-        game.setQuarter(game.getQuarter());
-        game.setClock(game.getClock());
         gameRepository.save(game);
     }
 }
