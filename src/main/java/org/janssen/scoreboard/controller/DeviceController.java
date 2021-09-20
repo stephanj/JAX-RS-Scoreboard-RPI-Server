@@ -98,7 +98,7 @@ public class DeviceController {
         execute(String.format("%s -q%d", cmd_score, 0));
     }
 
-    public void setFoul(final Team team) {
+    public void setTeamFoul(final Team team) {
         if (team.getKey().equalsIgnoreCase(TeamType.A.toString())) {
             setFoulsHome(team.getFouls());
         } else {

@@ -203,7 +203,7 @@ public class GameService {
 
         teamService.save(team);
 
-        device.setFoul(team);
+        device.setTeamFoul(team);
 
         if (team.getFouls() != 0) {
             device.setPlayerFoul(team.getFouls());

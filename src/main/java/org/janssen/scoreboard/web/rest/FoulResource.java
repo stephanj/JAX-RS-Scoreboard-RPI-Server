@@ -35,8 +35,7 @@ public class FoulResource {
     }
 
     @GetMapping("/{teamId}")
-    public ResponseEntity<String> getFouls(
-            @PathVariable("teamId") Long teamId) {
+    public ResponseEntity<String> getFouls(@PathVariable("teamId") Long teamId) {
 
         log.debug("Get fouls for team {}", teamId);
 
@@ -63,6 +62,13 @@ public class FoulResource {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Increment team fouls.
+     *
+     * @param teamId        the team id for which the foul is added
+     * @param playerFouls   the total player fouls selected by "table responsible person" on Android app
+     * @return
+     */
     @PutMapping("/inc/{teamId}/{totalFouls}")
     public ResponseEntity<?> incrementFouls(
             @PathVariable("teamId") Long teamId,
