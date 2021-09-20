@@ -89,7 +89,7 @@ public class FoulResource {
 
                         log.info(String.format("Team %s has %d fouls", team.getName(), team.getFouls()));
 
-                        gameService.update(team);
+                        gameService.update(team, playerFouls);
 
                     } else {
                         // 5 Team fouls so only show player fouls
@@ -117,7 +117,7 @@ public class FoulResource {
 
                     log.info(String.format("Team %s has %d fouls", team.getName(), team.getFouls()));
 
-                    gameService.update(team);
+                    gameService.update(team, 0);
 
                     return ResponseEntity.ok().build();
                 })

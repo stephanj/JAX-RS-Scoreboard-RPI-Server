@@ -185,8 +185,14 @@ public class GameService {
             .ifPresent(this::resetTeamFouls);
     }
 
+    /**
+     * Update team for given game.
+     *
+     * @param team  the updated team details
+     * @param totalPersonalFouls the total personal player fouls
+     */
     @Transactional
-    public void update(final Team team) {
+    public void update(final Team team, final int totalPersonalFouls) {
         log.debug("team.isMirrored? " + team.isMirrored());
 
         if (team.isMirrored()) {
@@ -205,8 +211,9 @@ public class GameService {
 
         device.setTeamFoul(team);
 
-        if (team.getFouls() != 0) {
-            device.setPlayerFoul(team.getFouls());
+        // If total player fouls is not zero, then show the player fouls on scoreboard
+        if (totalPersonalFouls != 0) {
+            device.setPlayerFoul(totalPersonalFouls);
         }
     }
 
