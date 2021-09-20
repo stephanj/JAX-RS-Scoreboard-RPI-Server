@@ -177,6 +177,23 @@ Test that your script gets executed if rc.local is started:
     
     $ sudo service rc.local restart
 
+The startup.sh script 
+
+    # Run NGROK for remote ssh support
+    /home/pi/ngrok tcp 22 -config /home/pi/config.xml --log=stdout > /home/pi/ngrok.log  &
+    
+    # Start the scoreboard web app
+    java -jar /home/pi/scoreboard-1.0.0.jar > /home/pi/output.log &
+
+The ngrok config.xml file which contains the ngrok authentication token available form the ngrok dashboard.
+
+    authtoken: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    tunnels:
+        default:
+            proto: tcp
+            addr: 22
+
+
 # RPI Network Config 
 
 The RPI is connected with an ethernet cable to the local network.  
@@ -211,19 +228,17 @@ Simply unzip it, and you have installed ngrok!
 
 To use ngrok, you must be first authenticate it using the ngrok executable file from the unzipped folder.
 
-    # If you installed with snap
-    ngrok authtoken <YOUR_AUTH_TOKEN>
-    # If you downloaded a zipped file
     ./ngrok authtoken <YOUR_AUTH_TOKEN>
 
-Your authentication token can be found in the dashboard page of ngrok.
+Your authentication token can be found in the dashboard page of ngrok:
+
+    https://dashboard.ngrok.com/get-started/your-authtoken
+
 
 ## Run ngrok Server
 
 Now, we can start forwarding the SSH port using ngrok! Run the following command:
 
-    # If you installed with snap
-    ngrok tcp 22
     # If you downloaded a zipped file
     ./ngrok tcp 22
 
@@ -236,16 +251,18 @@ You should see some output similar to this:
     Version                       2.3.35
     Region                        Japan (jp)
     Web Interface                 http://127.0.0.1:4040
-    Forwarding                    <YOUR_ASSIGNED_URL> -> localhost:22
+    Forwarding                    tcp://12.tcp.ngrok.io:10201 -> localhost:22
 
-Your SSH port is now accessible in what is written in <YOUR_ASSIGNED_URL>! For example, if it says tcp://0.tcp.jp.ngrok.io:11111, you can access it using that URL.
+    Connections                   ttl     opn     rt1     rt5     p50     p90
+    1       0       0.01    0.00    9.32    9.32
+
+
+Your SSH port is now accessible in what is written in tcp://12.tcp.ngrok.io:10201
+For example, if it says tcp://12.tcp.jp.ngrok.io:10201, you can access it using the URL 12.tcp.ngrok.io on port 10201
 
 ### Connect to RPI using ssh
 
 You have successfully set up SSH access to your remote Linux machine using ngrok. You can SSH into the machine using the following command:
 
-    # Assuming your URL was tcp://0.tcp.jp.ngrok.io:11111
-    ssh <YOUR_USERNAME>@0.tcp.jp.ngrok.io -p 11111
-
-    # Using the RPI username pi
-    ssh pi@0.tcp.jp.ngrok.io -p 11111
+    # Assuming your URL was tcp://0.tcp.jp.ngrok.io:10201 and using the RPI username pi
+    ssh pi@0.tcp.jp.ngrok.io -p 10201
