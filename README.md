@@ -222,7 +222,7 @@ To use ngrok, you should install it to the Linux machine you want to expose.
 
     wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm.zip 
 
-Simply unzip it, and you have installed ngrok!
+Simply unzip it (in /home/pi) and you have installed ngrok!
 
 ## Authenticate ngrok
 
