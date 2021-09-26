@@ -82,9 +82,10 @@ static void initspi(int fd)
       pabort("can't get max speed hz");
 
 	// Initialize Matrix
-	matrixwrite(fd, 0x0C, 0x01); // Normal operation
-	matrixwrite(fd, 0x0B, 0x07); // Scan Limit (all digits)
-	matrixwrite(fd, 0x0A, 0x07); // Intensity
+    matrixwrite(fd, 0x0F, 0x00); // Write 0X00 to get it out of Display Test Mode.
+	matrixwrite(fd, 0x0C, 0x01); // 0x01 Normal operation - 0x00 for shutdown
+	matrixwrite(fd, 0x0B, 0x07); // Scan Limit (scan all digits)
+	matrixwrite(fd, 0x0A, 0x07); // Intensity 0x01 (LOW) .. 0x0F (high)
 	matrixwrite(fd, 0x09, 0xFF); // Decode mode (on!)
 }
 
