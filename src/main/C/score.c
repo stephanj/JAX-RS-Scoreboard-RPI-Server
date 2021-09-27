@@ -142,7 +142,7 @@ void usage(void)
 	printf(" -x test\n");
 	printf(" \n");
 	printf("Application developed by Stephan Janssen (sja@devoxx.com)\n");
-	printf("Sept 2013 - v0.1.1\n");
+	printf("Sept 2021 - v1.0.0\n");
 
 	exit (8);
 }
