@@ -27,10 +27,10 @@ public class GameClockController {
     // to update the clock when "start" has been signaled!
     private static final int START_CLOCK = 1;
 
-    // When the milli seconds counter reaches 0 we update the game clock
+    // When the milli-seconds counter reaches 0 we update the game clock
     private static final int UPDATE_CLOCK = 0;
 
-    // We reset the milli seconds timer counter to 10 when the clock has been updated.
+    // We reset the milli-seconds timer counter to 10 when the clock has been updated.
     // This results in 10 x 100ms to pass by to update the game clock again at 1000ms
     private static final int RESET_TIMER = 10;
 
