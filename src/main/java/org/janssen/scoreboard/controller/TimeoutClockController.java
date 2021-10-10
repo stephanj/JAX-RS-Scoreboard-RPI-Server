@@ -100,4 +100,8 @@ public class TimeoutClockController {
     public boolean isNotRunning() {
         return !isRunning;
     }
+
+    public int getTimeoutValue() {
+        return this.timeoutValue;
+    }
 }
