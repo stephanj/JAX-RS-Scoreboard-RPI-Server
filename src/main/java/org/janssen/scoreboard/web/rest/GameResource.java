@@ -2,6 +2,7 @@ package org.janssen.scoreboard.web.rest;
 
 import org.janssen.scoreboard.controller.DeviceController;
 import org.janssen.scoreboard.controller.GameClockController;
+import org.janssen.scoreboard.controller.TimeoutClockController;
 import org.janssen.scoreboard.controller.TwentyFourClockController;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.service.GameService;
@@ -41,9 +42,12 @@ public class GameResource {
 
     private final DeviceController deviceController;
 
+    private final TimeoutClockController timeoutClockController;
+
     public GameResource(GameService gameService,
                         GameClockController gameClockController,
                         TwentyFourClockController twentyFourClockController,
+                        TimeoutClockController timeoutClockController,
                         DeviceController deviceController,
                         ProducerService producerService) {
         this.gameService = gameService;
@@ -51,6 +55,7 @@ public class GameResource {
         this.gameClockController = gameClockController;
         this.twentyFourClockController = twentyFourClockController;
         this.producerService = producerService;
+        this.timeoutClockController = timeoutClockController;
     }
 
     @PostMapping
@@ -61,7 +66,7 @@ public class GameResource {
                                         @RequestParam("court") String court,
                                         @RequestParam("mirrored") boolean mirrored) throws URISyntaxException {
 
-        log.debug("Create new game for home team : {} and away team : {}", teamNameA, teamNameB);
+        log.debug(">>>>> Create new game for home team : {} and away team : {}", teamNameA, teamNameB);
 
         Game game = gameService.newGame(teamNameA, teamNameB, gameType, ageCategory, court, mirrored);
 
@@ -131,6 +136,7 @@ public class GameResource {
     @GetMapping("info/{gameId}")
     public ResponseEntity<?> getGameInfoAsJson(@PathVariable("gameId") Long gameId) {
         log.debug(">>>>> Get game info for {}", gameId);
+
         return gameService
                 .findGameById(gameId)
                 .map(game -> ResponseEntity
@@ -141,7 +147,6 @@ public class GameResource {
 
     private String getGameClockFormatted(final Game game) {
 
-
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
         jsonObject.put("s", gameClockController.getSeconds() % 60);             // Clock seconds
@@ -149,6 +154,8 @@ public class GameResource {
         jsonObject.put("A", game.getTeamA().getScore());                        // Home team score
         jsonObject.put("B", game.getTeamB().getScore());                        // Visiting team score
         jsonObject.put("Q", getQuarterString(game.getQuarter()));               // Game quarter
+        jsonObject.put("T", timeoutClockController.isRunning());                // Timeout clock running?
+        jsonObject.put("TT", timeoutClockController.getTimeoutValue());         // Timeout time
         log.debug("Game info : '{}'", jsonObject);
         return jsonObject.toJSONString();
     }
@@ -169,6 +176,8 @@ public class GameResource {
      */
     @GetMapping(value = "{gameId}", produces = MediaType.TEXT_PLAIN_VALUE)
     public String showGameAsText(@PathVariable("gameId") Long gameId) {
+        log.debug(">>>>> Get game info as text {}", gameId);
+
         if (gameId == null || gameId == 0) {
             return "Game Id can't be null or zero";
         }
