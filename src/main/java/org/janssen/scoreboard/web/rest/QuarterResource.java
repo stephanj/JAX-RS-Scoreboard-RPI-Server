@@ -75,7 +75,8 @@ public class QuarterResource {
         return gameService
                 .findGameById(gameId)
                 .map(game -> {
-                    gameService.incrementGameQuarter(game);
+                    game.incrementQuarter();
+                    gameService.saveGameQuarter(game);
                     return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.badRequest().body("Wedstrijd niet gevonden, start een 'New Game'!!"));
@@ -102,15 +103,8 @@ public class QuarterResource {
                 .findGameById(gameId)
                 .filter(game -> game.getQuarter() > 1)
                 .map(game -> {
-
                     game.decrementQuarter();
-
-                    gameService.resetTeamFouls(game);
-
-                    gameService.resetTimeoutLEDs(game);
-
-                    gameService.update(game);
-
+                    gameService.saveGameQuarter(game);
                     return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.badRequest().body("Wedstrijd niet gevonden, start een 'New Game'!!"));

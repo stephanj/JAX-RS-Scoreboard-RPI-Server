@@ -88,10 +88,7 @@ public class GameService {
     }
 
     @Transactional
-    public void incrementGameQuarter(Game game) {
-
-        // Verify how many quarters mini football can have... 2 ?
-        game.incrementQuarter();
+    public void saveGameQuarter(Game game) {
 
         resetTeamFouls(game);
 
@@ -110,8 +107,7 @@ public class GameService {
         gameRepository.save(game);
     }
 
-    @Transactional
-    public void resetTimeoutLEDs(final Game game) {
+    private void resetTimeoutLEDs(final Game game) {
 
         log.info("game.isMirrored? " + game.isMirrored());
 
@@ -138,8 +134,7 @@ public class GameService {
         gpioController.setLed(GPIOType.TIME_OUT_V2, false);
     }
 
-    @Transactional
-    public void resetTeamFouls(final Game game) {
+    private void resetTeamFouls(final Game game) {
         log.debug("Reset team fouls for game with id {}", game.getId());
 
         if (game.getGameType() == GameType.BASKET ||
