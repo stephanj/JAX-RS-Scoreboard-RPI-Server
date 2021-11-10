@@ -48,6 +48,8 @@ public class GameClockController {
 
     private final ProducerService producerService;
 
+    private boolean countDownMode = false;
+
     public GameClockController(GPIOController gpioController,
                                DeviceController device,
                                ProducerService producerService) {
@@ -102,12 +104,22 @@ public class GameClockController {
         }
     }
 
+    /**
+     * Start the game clock.
+     *
+     * @param currentTimeInSeconds  game clock time in seconds
+     * @param gameType game type
+     * @param mirrored mirror the clock
+     * @param countDownMode count down mode
+     */
     public synchronized void start(final int currentTimeInSeconds,
                                    final GameType gameType,
-                                   final boolean mirrored) {
+                                   final boolean mirrored,
+                                   final boolean countDownMode) {
 
         log.debug(">>>> Start game clock with {} seconds", currentTimeInSeconds);
 
+        this.countDownMode = countDownMode;
         this.gameType = gameType;
         this.mirrored = mirrored;
 
@@ -156,5 +168,9 @@ public class GameClockController {
 
     public boolean isNotRunning() {
         return !isRunning;
+    }
+
+    public boolean inCountDownMode() {
+        return countDownMode;
     }
 }

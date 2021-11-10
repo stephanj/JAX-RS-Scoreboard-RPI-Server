@@ -35,7 +35,7 @@ public class ClockService {
 
         if (gameClockController.isNotRunning()) {
             if (game.getClock() > 0 && gameClockController.getSeconds() > 0) {
-                gameClockController.start(game.getClock(), game.getGameType(), game.isMirrored());
+                gameClockController.start(game.getClock(), game.getGameType(), game.isMirrored(), false);
             } else {
                 log.info("Can not start clock because clock is 0");
             }
@@ -69,14 +69,16 @@ public class ClockService {
      * @param seconds   seconds to count down
      * @param mirrored  mirror count down on seconds score board
      */
-    public void startCountdown(int seconds, boolean mirrored) {
-        log.debug("Start game clock countdown {} secs and is mirrored {}", seconds, mirrored);
+    public void startCountdown(int seconds, boolean mirrored, boolean countDown) {
+
+        log.debug("Start game clock countdown {} secs and is mirrored {}, in count down mode {}",
+                seconds, mirrored, countDown);
 
         if (gameClockController.isRunning()) {
             gameClockController.stop();
         }
 
-        gameClockController.start(seconds, GameType.BASKET, mirrored);
+        gameClockController.start(seconds, GameType.BASKET, mirrored, countDown);
     }
 
     /**

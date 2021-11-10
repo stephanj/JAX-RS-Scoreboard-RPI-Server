@@ -111,6 +111,7 @@ public class GameResource {
         log.debug(">>>>> Find game by id {}", gameId);
 
         if (gameId == null || gameId == 0) {
+            log.error("Game id is null or zero");
             return ResponseEntity.badRequest().body("Game Id can't be null or zero");
         }
 
@@ -151,19 +152,28 @@ public class GameResource {
         jsonObject.put("m", gameClockController.getSeconds() / 60);             // Clock minutes
         jsonObject.put("A", game.getTeamA().getScore());                        // Home team score
         jsonObject.put("B", game.getTeamB().getScore());                        // Visiting team score
-        jsonObject.put("Q", getQuarterString(game.getQuarter()));               // Game quarter
+        jsonObject.put("Q", getQuarterString(game.getQuarter(), gameClockController.inCountDownMode()));
         jsonObject.put("T", timeoutClockController.isRunning());                // Timeout clock running?
         jsonObject.put("TT", timeoutClockController.getTimeoutValue());         // Timeout time
         return jsonObject.toJSONString();
     }
 
-    private String getQuarterString(Integer quarter) {
-        switch (quarter) {
-            case 1: return "1st";
-            case 2: return "2nd";
-            case 3: return "3rd";
-            case 4: return "4th";
-            default:  return "OT";
+    private String getQuarterString(Integer quarter, boolean countDownMode) {
+        if (!countDownMode) {
+            switch (quarter) {
+                case 1:
+                    return "1st";
+                case 2:
+                    return "2nd";
+                case 3:
+                    return "3rd";
+                case 4:
+                    return "4th";
+                default:
+                    return "OT";
+            }
+        } else {
+            return "Countdown";
         }
     }
 
@@ -177,6 +187,7 @@ public class GameResource {
         log.debug(">>>>> Get game info as text {}", gameId);
 
         if (gameId == null || gameId == 0) {
+            log.error("Game id is null or zero");
             return "Game Id can't be null or zero";
         }
 
@@ -206,6 +217,7 @@ public class GameResource {
         log.debug("Delete game with id {}", gameId);
 
         if (gameId == null || gameId == 0) {
+            log.error("Game id is null or zero");
             return ResponseEntity.badRequest().body("Game Id can't be null or zero");
         }
 

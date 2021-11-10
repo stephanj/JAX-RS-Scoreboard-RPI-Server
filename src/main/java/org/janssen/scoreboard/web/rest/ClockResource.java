@@ -81,7 +81,7 @@ public class ClockResource {
     public ResponseEntity<?> countDownClock(
             @PathVariable("seconds") int seconds,
             @RequestParam("mirrored") boolean mirrored) {
-        clockService.startCountdown(seconds, mirrored);
+        clockService.startCountdown(seconds, mirrored, true);
         return ResponseUtil.ok();
     }
 
