@@ -106,12 +106,12 @@ public class GameClockController {
                                    final GameType gameType,
                                    final boolean mirrored) {
 
-        log.debug(">>>> Start game clock");
+        log.debug(">>>> Start game clock with {} seconds", currentTimeInSeconds);
 
         this.gameType = gameType;
         this.mirrored = mirrored;
 
-        if (!isRunning && currentTimeInSeconds > 0) {
+        if (isNotRunning() && currentTimeInSeconds > 0) {
             this.currentTimeInSeconds = currentTimeInSeconds;
             isRunning =  true;
             milliCounter = 1;
@@ -121,7 +121,7 @@ public class GameClockController {
     public synchronized void stop() {
         log.debug("Stop game clock");
 
-        if (isRunning) {
+        if (isRunning()) {
             isRunning = false;
         }
     }
@@ -133,7 +133,6 @@ public class GameClockController {
 
     public void setSeconds(int seconds) {
         currentTimeInSeconds = seconds;
-
         setClock();
     }
 

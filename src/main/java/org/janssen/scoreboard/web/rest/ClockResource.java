@@ -67,8 +67,10 @@ public class ClockResource {
                 .findGameById(gameId)
                 .map(game -> {
                     if (clockService.start(game)) {
+                        log.debug("Clock started");
                         return ResponseUtil.ok();
                     } else {
+                        log.debug("Clock NOT started!!!");
                         return ResponseUtil.badRequest();
                     }
                 })

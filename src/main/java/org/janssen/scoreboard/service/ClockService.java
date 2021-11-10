@@ -33,14 +33,14 @@ public class ClockService {
     public boolean start(Game game) {
         log.debug("Start game clock {}", game);
 
-        if (gameClockController.isRunning()) {
+        if (gameClockController.isNotRunning()) {
             if (game.getClock() > 0 && gameClockController.getSeconds() > 0) {
                 gameClockController.start(game.getClock(), game.getGameType(), game.isMirrored());
-                return true;
             } else {
                 log.info("Start clock but is 0");
-                return false;
+                stop(game);
             }
+            return true;
         }
         return false;
     }
@@ -51,6 +51,8 @@ public class ClockService {
      * @return true when successful
      */
     public boolean stop(Game game) {
+        log.debug("Stop game clock {}", game);
+
         if (gameClockController.isRunning()) {
 
             gameClockController.stop();
