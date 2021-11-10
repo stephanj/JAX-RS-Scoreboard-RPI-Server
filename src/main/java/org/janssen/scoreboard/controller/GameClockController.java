@@ -173,4 +173,8 @@ public class GameClockController {
     public boolean inCountDownMode() {
         return countDownMode;
     }
+
+    public void setCountDownMode(boolean countDown) {
+        this.countDownMode = countDown;
+    }
 }

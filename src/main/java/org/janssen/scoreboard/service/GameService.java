@@ -1,8 +1,6 @@
 package org.janssen.scoreboard.service;
 
-import org.janssen.scoreboard.controller.DeviceController;
-import org.janssen.scoreboard.controller.GPIOController;
-import org.janssen.scoreboard.controller.GameClockController;
+import org.janssen.scoreboard.controller.*;
 import org.janssen.scoreboard.model.DatedModel;
 import org.janssen.scoreboard.model.Game;
 import org.janssen.scoreboard.model.Team;
@@ -12,6 +10,7 @@ import org.janssen.scoreboard.model.type.GameType;
 import org.janssen.scoreboard.model.type.TeamType;
 import org.janssen.scoreboard.service.broadcast.ProducerService;
 import org.janssen.scoreboard.service.repository.GameRepository;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.janssen.scoreboard.service.util.Constants.FOUR_MINUTES;
-import static org.janssen.scoreboard.service.util.Constants.TEN_MINUTES_IN_SECONDS;
+import static org.janssen.scoreboard.service.util.Constants.*;
 
 @Service
 public class GameService {
@@ -38,22 +36,30 @@ public class GameService {
 
     private final GPIOController gpioController;
 
-    private final DeviceController device;
+    private final DeviceController deviceController;
+
+    private final TwentyFourClockController twentyFourClockController;
+
+    private final TimeoutClockController timeoutClockController;
 
     private final ProducerService producerService;
 
     public GameService(GameRepository gameRepository,
                        GameClockController gameClockController,
                        TeamService teamService,
-                       DeviceController device,
+                       DeviceController deviceController,
                        GPIOController gpioController,
+                       TwentyFourClockController twentyFourClockController,
+                       TimeoutClockController timeoutClockController,
                        ProducerService producerService) {
         this.gameRepository = gameRepository;
         this.gameClockController = gameClockController;
         this.teamService = teamService;
         this.gpioController = gpioController;
         this.producerService = producerService;
-        this.device = device;
+        this.deviceController = deviceController;
+        this.twentyFourClockController = twentyFourClockController;
+        this.timeoutClockController = timeoutClockController;
     }
 
     public Optional<Game> findGameById(Long gameId) {
@@ -66,6 +72,30 @@ public class GameService {
                 .stream()
                 .sorted(Comparator.comparing(DatedModel::getCreatedOn).reversed())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Initialise the game.
+     *
+     * @param game the game
+     */
+    public void init(Game game) {
+        log.debug(">>> Init game {}", game);
+
+        // Clock might be running in countdown mode
+        if (gameClockController.inCountDownMode() || gameClockController.isRunning()) {
+            gameClockController.stop();
+            gameClockController.setCountDownMode(false);
+        }
+
+        if (game.isMirrored()) {
+            // Init slave scoreboard
+            producerService.newGame();
+        }
+
+        gameClockController.setSeconds(game.getClock());
+
+        deviceController.setAllClocks(game.getClock(), TWENTY_FOUR_SECONDS);
     }
 
     public void setGameClock(final Game game) {
@@ -89,6 +119,7 @@ public class GameService {
 
     @Transactional
     public void saveGameQuarter(Game game) {
+        log.debug("Save game quarter {}", game);
 
         resetTeamFouls(game);
 
@@ -108,8 +139,7 @@ public class GameService {
     }
 
     private void resetTimeoutLEDs(final Game game) {
-
-        log.info("game.isMirrored? " + game.isMirrored());
+        log.debug("game.isMirrored? " + game.isMirrored());
 
         if (game.isMirrored()) {
             log.info("QuarterService mirroring turn ON");
@@ -153,8 +183,8 @@ public class GameService {
                 producerService.printFoulsA(0);
                 producerService.printFoulsB(0);
             }
-            device.setFoulsHome(0);
-            device.setFoulsVisitors(0);
+            deviceController.setFoulsHome(0);
+            deviceController.setFoulsVisitors(0);
         }
     }
 
@@ -168,7 +198,7 @@ public class GameService {
         log.debug("Delete game with id {}", game.getId());
 
         gameRepository.delete(game);
-        device.clearBoard();
+        deviceController.clearBoard();
     }
 
     @Transactional
@@ -204,11 +234,11 @@ public class GameService {
 
         teamService.save(team);
 
-        device.setTeamFoul(team);
+        deviceController.setTeamFoul(team);
 
         // If total player fouls is not zero, then show the player fouls on scoreboard
         if (totalPersonalFouls != 0) {
-            device.setPlayerFoul(totalPersonalFouls);
+            deviceController.setPlayerFoul(totalPersonalFouls);
         }
     }
 
@@ -230,6 +260,8 @@ public class GameService {
                         String court,
                         boolean mirrored) {
 
+        log.debug("New game for team A {}, B {} and type {} on court {}", teamNameA, teamNameB, gameType, court);
+
         // Clock might be running in countdown mode
         if (gameClockController.isRunning()) {
             gameClockController.stop();
@@ -249,7 +281,7 @@ public class GameService {
             producerService.newGame();
         }
 
-        device.resetGame(game);
+        deviceController.resetGame(game);
 
         // Reset the timeout LEDs
         gpioController.setLed(GPIOType.TIME_OUT_V1, false);
@@ -270,6 +302,8 @@ public class GameService {
                        final int age,
                        final String court,
                        final boolean mirrored) {
+
+        log.debug("Create game for {} / {} on court {}", teamA, teamB, court);
 
         final Game game = new Game();
 
@@ -292,5 +326,37 @@ public class GameService {
     @Transactional
     public void update(final Game game) {
         gameRepository.save(game);
+    }
+
+    public String getInfo(Game game) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
+        jsonObject.put("s", gameClockController.getSeconds() % 60);             // Clock seconds
+        jsonObject.put("m", gameClockController.getSeconds() / 60);             // Clock minutes
+        jsonObject.put("A", game.getTeamA().getScore());                        // Home team score
+        jsonObject.put("B", game.getTeamB().getScore());                        // Visiting team score
+        jsonObject.put("Q", getQuarterString(game.getQuarter(), gameClockController.inCountDownMode()));
+        jsonObject.put("T", timeoutClockController.isRunning());                // Timeout clock running?
+        jsonObject.put("TT", timeoutClockController.getTimeoutValue());         // Timeout time
+        return jsonObject.toJSONString();
+    }
+
+    private String getQuarterString(Integer quarter, boolean countDownMode) {
+        if (!countDownMode) {
+            switch (quarter) {
+                case 1:
+                    return "1st";
+                case 2:
+                    return "2nd";
+                case 3:
+                    return "3rd";
+                case 4:
+                    return "4th";
+                default:
+                    return "OT";
+            }
+        } else {
+            return "---";
+        }
     }
 }
