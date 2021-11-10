@@ -135,8 +135,6 @@ public class GameResource {
      */
     @GetMapping("info/{gameId}")
     public ResponseEntity<?> getGameInfoAsJson(@PathVariable("gameId") Long gameId) {
-        log.debug(">>>>> Get game info for {}", gameId);
-
         return gameService
                 .findGameById(gameId)
                 .map(game -> ResponseEntity
