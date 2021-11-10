@@ -154,7 +154,6 @@ public class GameResource {
         jsonObject.put("Q", getQuarterString(game.getQuarter()));               // Game quarter
         jsonObject.put("T", timeoutClockController.isRunning());                // Timeout clock running?
         jsonObject.put("TT", timeoutClockController.getTimeoutValue());         // Timeout time
-        log.debug("Game info : '{}'", jsonObject);
         return jsonObject.toJSONString();
     }
 
