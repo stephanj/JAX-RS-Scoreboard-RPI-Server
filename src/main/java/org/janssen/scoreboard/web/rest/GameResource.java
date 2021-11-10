@@ -173,7 +173,7 @@ public class GameResource {
                     return "OT";
             }
         } else {
-            return "Countdown";
+            return "---";
         }
     }
 
