@@ -162,7 +162,8 @@ public class GameResource {
             case 1: return "1st";
             case 2: return "2nd";
             case 3: return "3rd";
-            default:  return "4th";
+            case 4: return "4th";
+            default:  return "OT";
         }
     }
 

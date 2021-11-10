@@ -57,16 +57,17 @@ public class QuarterResource {
         log.debug("Increment quarter for game {}", gameId);
 
         if (gameClockController.isRunning()) {
-            log.info("Game clock controller is running");
+            log.error("Game clock controller is running");
             return ResponseEntity.badRequest().body("Quarter kan je niet veranderen wanneer klok actief is");
         }
 
         if (gameClockController.getSeconds() > 0) {
-            log.info("seconds is not 0");
+            log.error("Quarter can't be incremented because seconds is not 0");
             return ResponseEntity.badRequest().body("Klok staat nog niet op 00:00");
         }
 
         if (gameId == null || gameId == 0) {
+            log.error("Game id is null or zero!");
             String msg = String.format("Game ID kan niet '%d' zijn", gameId);
             log.info(msg);
             return ResponseEntity.badRequest().body(msg);

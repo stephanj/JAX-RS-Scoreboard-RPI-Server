@@ -37,8 +37,7 @@ public class ClockService {
             if (game.getClock() > 0 && gameClockController.getSeconds() > 0) {
                 gameClockController.start(game.getClock(), game.getGameType(), game.isMirrored());
             } else {
-                log.info("Start clock but is 0");
-                stop(game);
+                log.info("Can not start clock because clock is 0");
             }
             return true;
         }
