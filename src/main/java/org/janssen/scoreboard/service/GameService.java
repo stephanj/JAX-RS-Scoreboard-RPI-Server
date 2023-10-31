@@ -333,11 +333,19 @@ public class GameService {
         jsonObject.put("24", twentyFourClockController.getTwentyFourSeconds()); // 24 seconds
         jsonObject.put("s", gameClockController.getSeconds() % 60);             // Clock seconds
         jsonObject.put("m", gameClockController.getSeconds() / 60);             // Clock minutes
+
         jsonObject.put("A", game.getTeamA().getScore());                        // Home team score
         jsonObject.put("B", game.getTeamB().getScore());                        // Visiting team score
+
         jsonObject.put("Q", getQuarterString(game.getQuarter(), gameClockController.inCountDownMode()));
+
         jsonObject.put("T", timeoutClockController.isRunning());                // Timeout clock running?
         jsonObject.put("TT", timeoutClockController.getTimeoutValue());         // Timeout time
+        jsonObject.put("TH", game.getTeamA().getTimeOut());                     // Timeouts Home Team
+        jsonObject.put("TA", game.getTeamB().getTimeOut());                     // Timeouts Away Team
+
+        jsonObject.put("FH", game.getTeamA().getFouls());                       // Fouls Home Team
+        jsonObject.put("FA", game.getTeamB().getFouls());                       // Fouls Away Team
         return jsonObject.toJSONString();
     }
 
