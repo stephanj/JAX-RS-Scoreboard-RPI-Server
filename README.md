@@ -1,5 +1,9 @@
 # Scoreboard Web App
 
+## Use branch spring-boot !!!
+
+    git checkout spring-boot 
+
 ## Compile project
 
 Server Scoreboard code moet blijkbaar met JDK 1.7 gecompiled worden om op de versie van TomEE te draaien.
