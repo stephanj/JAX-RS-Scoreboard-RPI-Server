@@ -179,7 +179,7 @@ public class GameService {
             teamService.save(teamB);
 
             // Reset the foul LEDs
-            if (game.isMirrored()) {
+            if (Boolean.TRUE.equals(game.isMirrored())) {
                 producerService.printFoulsA(0);
                 producerService.printFoulsB(0);
             }
@@ -220,7 +220,7 @@ public class GameService {
     public void update(final Team team, final int totalPersonalFouls) {
         log.debug("team.isMirrored? " + team.isMirrored());
 
-        if (team.isMirrored()) {
+        if (Boolean.TRUE.equals(team.isMirrored())) {
             log.info("FoulService mirroring is turned ON");
 
             if (team.getKey().equals(TeamType.A.toString())) {

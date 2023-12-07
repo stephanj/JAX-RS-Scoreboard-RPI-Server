@@ -44,17 +44,26 @@ Compile and package project using maven with following command :
 
 Get source code from github
 
-    git clone https://github.com/stephanj/JAX-RS-Scoreboard-RPI-Server.git 
-
+```shell
+    git clone https://github.com/stephanj/JAX-RS-Scoreboard-RPI-Server.git
+    
     cd JAX-RS-Scoreboard-RPI-Server
+```
+ 
+Now compile and package the project using maven with following command :
+```java
+    mvn clean compile package
+```
+     
+Copy the jar file to the RPI
 
-    mvn clean compile package 
-
-    cp target/scoreboard.1.0.0.jar /home/pi/.
+```shell
+  cp target/scoreboard.1.0.0.jar /home/pi/.
+  
+  cd /home/pi
     
-    cd /home/pi
-    
-    java -jar scoreboard-1.0.0.jar > /home/pi/output.log
+  java -jar scoreboard-1.0.0.jar > /home/pi/output.log    
+```
     
 ### Run as service
 
