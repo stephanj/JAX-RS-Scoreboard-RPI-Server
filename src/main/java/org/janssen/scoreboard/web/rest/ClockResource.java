@@ -34,6 +34,11 @@ public class ClockResource {
         this.gameClockController = gameClockController;
     }
 
+    /**
+     * Get the game clock
+     * @param gameId the game id
+     * @return the game clock
+     */
     @GetMapping("{gameId}")
     public ResponseEntity<?> getClock(@PathVariable("gameId") Long gameId) {
 

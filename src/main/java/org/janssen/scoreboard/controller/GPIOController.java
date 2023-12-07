@@ -15,7 +15,7 @@ import static org.janssen.scoreboard.service.util.Constants.ONE_SECOND_IN_MILLI;
 import static org.janssen.scoreboard.service.util.Constants.TWO_SECONDS_IN_MILLI;
 
 /**
- * @link http://pi4j.com/usage.html
+ * @link <a href="http://pi4j.com/usage.html">http://pi4j.com/usage.html</a>
  * @author Stephan Janssen
  */
 @Component
