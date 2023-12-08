@@ -42,24 +42,28 @@ public class GPIOController {
     @PostConstruct
     public void init() {
         if (runningOnRPI) {
-            final GpioController gpio = GpioFactory.getInstance();
+            try {
+                final GpioController gpio = GpioFactory.getInstance();
 
-            // Timeout LEDs
-            timeoutHome1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "TimeOut Home 1", PinState.LOW);
-            timeoutHome2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_03, "TimeOut Home 2", PinState.LOW);
-            timeoutVisitors1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "TimeOut Visitors 1", PinState.LOW);
-            timeoutVisitors2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07, "TimeOut Visitors 2", PinState.LOW);
+                // Timeout LEDs
+                timeoutHome1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "TimeOut Home 1", PinState.LOW);
+                timeoutHome2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_03, "TimeOut Home 2", PinState.LOW);
+                timeoutVisitors1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "TimeOut Visitors 1", PinState.LOW);
+                timeoutVisitors2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07, "TimeOut Visitors 2", PinState.LOW);
 
-            // Buzzers
-            endQuarter = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_04, "End Quarter", PinState.LOW);
-            endTwentyFourSeconds = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "End 24s", PinState.LOW);
-            attentionRefs = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_06, "Attention", PinState.LOW);
+                // Buzzers
+                endQuarter = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_04, "End Quarter", PinState.LOW);
+                endTwentyFourSeconds = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "End 24s", PinState.LOW);
+                attentionRefs = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_06, "Attention", PinState.LOW);
 
-            // 24s LEDs
-            twentyFourSeconds = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "24s LEDs", PinState.LOW);
+                // 24s LEDs
+                twentyFourSeconds = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "24s LEDs", PinState.LOW);
 
-            log.info("Scoreboard startup buzzer.... PING  :)");
-            setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
+                log.info("Scoreboard startup buzzer.... PING  :)");
+                setBuzz(GPIOType.ATTENTION, ONE_SECOND_IN_MILLI);
+            } catch (ExceptionInInitializerError e) {
+                log.error(">>>>> Error initializing GPIOController", e);
+            }
         } else {
             log.info(">>>> NOT RUNNING ON RPI !!");
         }
